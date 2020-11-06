@@ -10,7 +10,7 @@ const routes: Routes = [
   },
   {
     component:DeckDetailsComponent,
-    path:'details'
+    path:'details/:id'
   }
 ];
 

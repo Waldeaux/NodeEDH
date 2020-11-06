@@ -16,19 +16,8 @@ export class DeckDetailsService {
     return this.deckDetails$.asObservable();
   }
 
-  getDeckDetailsTest(){
-    this.deckDetails$.next({
-      name:"estrid",
-      cards:[
-        {
-          name:"Estrid the Masked",
-          count:1
-        }
-      ]
-    })
-  }
   getDeckDetails(id:number){
-    this.http.get<DeckDetails>('http://localhost:8081/decks').pipe(
+    this.http.get<DeckDetails>(`http://localhost:8081/decks/${id}`).pipe(
       tap(x =>{
         this.deckDetails$.next(x);
       })

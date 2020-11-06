@@ -35,6 +35,25 @@ async function main(){
         })
     });
 
+    app.get('/decks/:id', function(req, res){
+        let query = "select * from decks where iddecks = " + req.params.id;
+        let deckPromise = new Promise(resolve =>{
+            con.query(query, function(err, result){
+                resolve(result[0]);
+            })
+        }).then(resolve =>{
+            let query = "SELECT c.name, dc.count FROM NodeEDH.cards as c join NodeEDH.deck_cards as dc on dc.card_id = c.id where dc.deck_id = " + req.params.id + ";"
+            con.query(query, function(err, result){
+                let resultObject = {
+                    name:resolve.name,
+                    cards:result
+                };
+                res.end(JSON.stringify(resultObject));
+            });
+        })
+
+    })
+
     app.listen(8081, function(){
 
     })
