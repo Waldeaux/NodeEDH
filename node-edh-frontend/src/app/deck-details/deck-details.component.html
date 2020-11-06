@@ -1,1 +1,6 @@
-<p>deck-details works!</p>
+<div *ngIf="deckDetails$ | async as details">
+    {{details.name}}
+    <div *ngFor="let card of details.cards">
+        {{card.count}}x {{card.name}}
+    </div>
+</div>
