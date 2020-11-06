@@ -1,0 +1,9 @@
+<form [formGroup]='deckEditor'>
+    <div>
+        <input type="text" formControlName="name">
+    </div>
+    <div>
+        <textarea formControlName="cards"></textarea>
+    </div>
+</form>
+<button (click)="submitForm()">Submit</button>

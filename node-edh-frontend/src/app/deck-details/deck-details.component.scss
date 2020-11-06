@@ -1,0 +1,12 @@
+.card-entry{
+    img{
+        position: absolute;
+        display:none;
+    }
+}
+
+.card-entry:hover{
+    img{
+        display:initial;
+    }
+}

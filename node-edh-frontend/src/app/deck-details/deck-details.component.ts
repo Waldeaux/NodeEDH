@@ -12,13 +12,22 @@ import { DeckDetailsService } from './services/deck-details.service';
 export class DeckDetailsComponent implements OnInit {
 
   constructor(private deckDetailsService:DeckDetailsService,
-    private router:ActivatedRoute) { }
+    private route:ActivatedRoute,
+    private router:Router) { }
 
   deckDetails$:Observable<DeckDetails>;
+  loading$:Observable<boolean>;
+  id :number;
   ngOnInit(): void {
-    let id = Number.parseInt(this.router.snapshot.paramMap.get('id'));
+    let id = Number.parseInt(this.route.snapshot.paramMap.get('id'));
+    this.loading$ = this.deckDetailsService.busyChanges();
+    this.id = id;
     this.deckDetails$ = this.deckDetailsService.dataChanges();
     this.deckDetailsService.getDeckDetails(id);
+  }
+
+  edit(){
+    this.router.navigate(['deck-editor', this.id]);
   }
 
 }

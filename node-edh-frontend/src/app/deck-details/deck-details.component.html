@@ -1,6 +1,13 @@
+<ng-container *ngIf="!(loading$ | async); else loading">
 <div *ngIf="deckDetails$ | async as details">
     {{details.name}}
-    <div *ngFor="let card of details.cards">
+    <div *ngFor="let card of details.cards" class="card-entry">
         {{card.count}}x {{card.name}}
+        <img src="https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={{card.multiverseId}}&type=card">
     </div>
 </div>
+
+<button (click)="edit()">Edit</button></ng-container>
+<ng-template #loading>
+    loading...
+</ng-template>

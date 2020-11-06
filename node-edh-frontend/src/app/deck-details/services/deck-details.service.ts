@@ -11,16 +11,27 @@ export class DeckDetailsService {
 
   constructor(private http:HttpClient) { }
   deckDetails$ = new BehaviorSubject<DeckDetails>(null);
+  busy$ = new BehaviorSubject<boolean>(false);
 
   dataChanges():Observable<DeckDetails>{
     return this.deckDetails$.asObservable();
   }
 
+  busyChanges():Observable<boolean>{
+    return this.busy$.asObservable();
+  }
+
   getDeckDetails(id:number){
-    this.http.get<DeckDetails>(`http://localhost:8081/decks/${id}`).pipe(
+    this.busy$.next(true);
+    this.deckDetailsApiCall(id).pipe(
       tap(x =>{
         this.deckDetails$.next(x);
+        this.busy$.next(false);
       })
     ).subscribe();
+  }
+
+  deckDetailsApiCall(id:number):Observable<DeckDetails>{
+    return this.http.get<DeckDetails>(`http://localhost:8081/decks/${id}`);
   }
 }
