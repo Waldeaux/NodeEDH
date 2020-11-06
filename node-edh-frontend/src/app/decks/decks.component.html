@@ -1,1 +1,3 @@
-<p>decks works!</p>
+<ng-container *ngFor="let deck of (decks$ | async)">
+    <div>{{deck.name}}</div>
+</ng-container>
