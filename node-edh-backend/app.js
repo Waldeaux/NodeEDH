@@ -16,7 +16,6 @@ async function main(){
     var promise = new Promise(resolve => {
     con.connect(function(error){
         if(error) throw error;
-        console.log("connected");
         con.query("use NodeEDH");
         resolve();
     });})
@@ -26,11 +25,9 @@ async function main(){
         let query = "select * from decks";
         con.query(query, function(err, result){
             if(err) {
-                console.log(err);
                 res.end(JSON.stringify([]));
                 return;
             };
-            console.log(result);
             res.end(JSON.stringify(result));
         })
     });
