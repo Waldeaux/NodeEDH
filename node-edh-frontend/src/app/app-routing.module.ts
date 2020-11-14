@@ -5,6 +5,9 @@ import { DeckDetailsComponent } from './deck-details/deck-details.component';
 import { DeckEditorComponent } from './deck-editor/deck-editor.component';
 import { DeckEditorRoutingService } from './deck-editor/services/deck-editor-routing.service';
 import { DecksComponent } from './decks/decks.component';
+import { InventoryEditorComponent } from './inventory-editor/inventory-editor.component';
+import { InventoryEditorRoutingService } from './inventory-editor/services/inventory-editor-routing.service';
+import { InventoryEditorService } from './inventory-editor/services/inventory-editor.service';
 
 const routes: Routes = [
   {
@@ -25,6 +28,13 @@ const routes: Routes = [
   {
     component:DeckCreatorComponent,
     path:'deck-creator'
+  },
+  {
+    component:InventoryEditorComponent,
+    path:'inventory-editor',
+    resolve:{
+      inventory:InventoryEditorRoutingService
+    }
   }
 ];
 

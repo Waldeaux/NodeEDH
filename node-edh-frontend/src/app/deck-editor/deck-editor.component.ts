@@ -41,7 +41,7 @@ export class DeckEditorComponent implements OnInit, OnDestroy {
   }
 
   submitForm(){
-    this.deckEditorService.updateDeckDetails(1, this.parseFormInput());
+    this.deckEditorService.updateDeckDetails(this.deckId, this.parseFormInput());
     this.subscriptions.add(this.deckEditorService.busy$.pipe(
       filter(x =>{
         return !x

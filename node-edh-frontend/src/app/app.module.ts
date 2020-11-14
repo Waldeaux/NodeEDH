@@ -11,6 +11,7 @@ import { DeckEditorComponent } from './deck-editor/deck-editor.component';
 import { ActivatedRouteSnapshot, RouterModule } from '@angular/router';
 import { DeckEditorFormComponent } from './shared/deck-editor-form/deck-editor-form.component';
 import { DeckCreatorComponent } from './deck-creator/deck-creator.component';
+import { InventoryEditorComponent } from './inventory-editor/inventory-editor.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { DeckCreatorComponent } from './deck-creator/deck-creator.component';
     DeckDetailsComponent,
     DeckEditorComponent,
     DeckEditorFormComponent,
-    DeckCreatorComponent
+    DeckCreatorComponent,
+    InventoryEditorComponent
   ],
   imports: [
     BrowserModule,

@@ -79,10 +79,14 @@ async function main(){
         res.end(deckId.toString());
         
     })
+    app.get('/inventory', async function(req, res){
+        getInventory().then(response =>{
+            res.end(JSON.stringify(response));
+        })
+    })
     app.put('/decks/:id', async function(req, res){
         let promiseArray = [];
         let name = req.body.name;
-        console.log(name);
         let cards = req.body.cards;
         var cardIdList = [];
         let deckId = req.params.id;
@@ -121,15 +125,12 @@ async function main(){
                 }
                 return 1;
             })
-            console.log(resolve);
             //For each submitted card, check if it exists, and if it does, check if the count needs to be updated
             cardIdList.forEach(submitCard =>{
                 let cardExists = false;
                 let countSame = false;
                 let index = -1;
                 resolve.forEach((currentCard, key) =>{
-                    console.log(submitCard.id);
-                    console.log(key);
                     if(submitCard.id === currentCard.card_id){
                         cardExists = true;
                         index = key;
@@ -142,7 +143,6 @@ async function main(){
                         return false;
                     }
                 })
-                console.log(cardExists);
                 //If the card already exists in that deck, update the record if the count is different
                 //Then remove the card from the currentDeckList for optimization and removal later on
                 if(cardExists){
@@ -150,19 +150,15 @@ async function main(){
                         //Update
                         promiseArray.push(updateCardCount(deckId, submitCard.id, submitCard.count))
                     }
-                    console.log("remove");
                     resolve.splice(index, 1);
                 }
     
                 //If it doesn't exist, add a record for it to that deck
                 else{
                     //Insert
-                    console.log(submitCard);
                     promiseArray.push(insertDeckCard(deckId, submitCard.id,submitCard.count))
                 }
             });
-
-            console.log(resolve);
             //Any cards remaining in the current deck array need to be removed. They are not in the most recently submitted deck list
             resolve.forEach(currentCard =>{
                 //Delete
@@ -177,13 +173,101 @@ async function main(){
         res.end(JSON.stringify([]));
     })
 
+    app.put('/inventory', async function(req, res){
+        let promiseArray = [];
+        let inventory = req.body.inventory;
+        var cardIdList = [];
+        //For each unique card name submitted, get the appropriate id
+        inventory.forEach(x =>{
+            promiseArray.push(getCard(x));
+        })
+        await Promise.all(promiseArray).then(result =>{
+            cardIdList = result;
+            resolve();
+        })
+        .then(resolve =>{
+            //Get the current cards of the updating deck
+            return new Promise(resolve =>{
+                let query = "select count, idcards from NodeEDH.inventory order by idcards";
+                con.query(query, function(err, result){
+                    resolve(result);
+                })
+            })
+        })
+        .then(resolve =>{
+            console.log(resolve);
+            console.log(cardIdList);
+            
+            let promiseArray = [];
+            //Order the submitted cards by card id
+            cardIdList = cardIdList.sort((a,b) =>{
+                if(a.id < b.id){
+                    return -1;
+                }
+                return 1;
+            });
+            resolve = resolve.sort((a,b) =>{
+                
+                if(a.card_id < b.card_id){
+                    return -1;
+                }
+                return 1;
+            })
+            //For each submitted card, check if it exists, and if it does, check if the count needs to be updated
+            cardIdList.forEach(submitCard =>{
+                let cardExists = false;
+                let countSame = false;
+                let index = -1;
+                resolve.forEach((currentCard, key) =>{
+                    if(submitCard.id === currentCard.idcards){
+                        cardExists = true;
+                        index = key;
+                        if(submitCard.count === currentCard.count){
+                            countSame = true;
+                        }
+                        return false;
+                    }
+                    if(submitCard.id < currentCard.idcards){
+                        return false;
+                    }
+                })
+                //If the card already exists in that deck, update the record if the count is different
+                //Then remove the card from the currentDeckList for optimization and removal later on
+                if(cardExists){
+                    if(!countSame){
+                        //Update
+                        promiseArray.push(updateInventoryCardCount(submitCard.id, submitCard.count))
+                    }
+                    resolve.splice(index, 1);
+                }
+    
+                //If it doesn't exist, add a record for it to that deck
+                else{
+                    //Insert
+                    promiseArray.push(insertInventoryCard(submitCard.id,submitCard.count))
+                }
+            });
+            //Any cards remaining in the current deck array need to be removed. They are not in the most recently submitted deck list
+            resolve.forEach(currentCard =>{
+                //Delete
+                promiseArray.push(deleteInventoryCard(currentCard.idcards))
+            })
+
+            return Promise.all(promiseArray).then(x =>{
+                Promise.resolve();
+            })
+        });
+        res.end(JSON.stringify([]));
+    })
     app.listen(8081, function(){
 
     })
 }
 
 function getCard(card){
-    let query = `select id from NodeEDH.cards where name = "${card.cardText}" limit 1;`
+    let name = card.cardText;
+    name = name.replace('\'','').replace(',','');
+    let query = `select id from NodeEDH.cards where standardized_name = "${name}" limit 1;`
     return new Promise(resolve =>{
         con.query(query, function(err, result){
             resolve({id:result[0].id, count:card.count});
@@ -200,6 +284,22 @@ function insertDeckCard(deckId, cardId, count){
     })
 }
 
+function insertInventoryCard(cardId, count){
+    let query = "INSERT INTO `NodeEDH`.`inventory` (`idcards`,`count`) VALUES ("+ cardId +"," + count+ ");"
+    return new Promise(resolve =>{
+        con.query(query, function(err, result){
+            resolve();
+        })
+    })
+}
+function updateInventoryCardCount(cardId, count){
+    let query = "UPDATE `NodeEDH`.`inventory` set `count` = " + count+ " WHERE idcards = " + cardId +";"
+    return new Promise(resolve =>{
+        con.query(query, function(err, result){
+            resolve();
+        })
+    })
+}
 function updateCardCount(deckId, cardId, count){
     let query = "UPDATE `NodeEDH`.`deck_cards` set `count` = " + count+ " WHERE deck_id = "+deckId+" and card_id = " + cardId +";"
     return new Promise(resolve =>{
@@ -209,6 +309,14 @@ function updateCardCount(deckId, cardId, count){
     })
 }
 
+function deleteInventoryCard(cardId){
+    let query = "Delete from `NodeEDH`.`inventory` WHERE idcards = " + cardId +";"
+    return new Promise(resolve =>{
+        con.query(query, function(err, result){
+            resolve();
+        })
+    })
+}
 function deleteDeckCard(deckId, cardId){
     let query = "Delete from `NodeEDH`.`deck_cards` WHERE deck_id = "+deckId+" and card_id = " + cardId +";"
     return new Promise(resolve =>{
@@ -219,8 +327,6 @@ function deleteDeckCard(deckId, cardId){
 }
 
 function updateDeckName(deckId, name){
-    console.log(deckId);
-    console.log(name);
     let query = "UPDATE `NodeEDH`.`decks` set `name` = \"" + name+ "\" WHERE iddecks = "+deckId +";"
     return new Promise(resolve =>{
         con.query(query, function(err, result){
@@ -234,6 +340,15 @@ function createDeck(name){
     return new Promise(resolve =>{
         con.query(query, function(err, result){
             resolve(result.insertId);
+        })
+    })
+}
+
+function getInventory(){
+    let query = "SELECT c.name, i.count FROM NodeEDH.inventory i left join NodeEDH.cards c on c.id = i.idcards;";
+    return new Promise(resolve =>{
+        con.query(query, function(err, result){
+            resolve(result);
         })
     })
 }
