@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { Deck } from './models/decks.model';
 import { DecksService } from './services/decks.service';
@@ -11,7 +12,8 @@ import { DecksService } from './services/decks.service';
 export class DecksComponent implements OnInit {
 
   constructor(
-    private decksService:DecksService
+    private decksService:DecksService,
+    private router:Router
   ) { }
 
   decks$:Observable<Deck[]>;
@@ -20,4 +22,10 @@ export class DecksComponent implements OnInit {
     this.decksService.getDecks();
   }
 
+  deckDetails(input:number){
+    this.router.navigate(['details', input])
+  }
+  createNewDeck(){
+    this.router.navigate(['deck-creator']);
+  }
 }

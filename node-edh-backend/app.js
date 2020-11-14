@@ -53,6 +53,32 @@ async function main(){
 
     })
 
+    app.post('/decks', async function(req, res){
+        let name = req.body.name;
+        let cards = req.body.cards;
+        let promiseArray = [];
+        let deckId = -1;
+        let cardsList = [];
+        cards.forEach(x =>{
+            promiseArray.push(getCard(x));
+        })
+        await Promise.all(promiseArray).then(resolve =>{
+            cardsList = resolve;
+            return createDeck(name);
+        })
+        .then(resolve =>{
+            let promiseArray = [];
+            deckId = resolve;
+            cardsList.forEach(element =>{
+                promiseArray.push(insertDeckCard(deckId, element.id, element.count));
+            })
+
+            return Promise.all(promiseArray);
+        });
+
+        res.end(deckId.toString());
+        
+    })
     app.put('/decks/:id', async function(req, res){
         let promiseArray = [];
         let name = req.body.name;
@@ -199,6 +225,15 @@ function updateDeckName(deckId, name){
     return new Promise(resolve =>{
         con.query(query, function(err, result){
             resolve();
+        })
+    })
+}
+
+function createDeck(name){
+    let query = "INSERT INTO `NodeEDH`.`decks` (`name`) VALUES(\"" + name + "\");"
+    return new Promise(resolve =>{
+        con.query(query, function(err, result){
+            resolve(result.insertId);
         })
     })
 }

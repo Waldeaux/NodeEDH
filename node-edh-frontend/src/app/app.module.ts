@@ -10,6 +10,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { DeckEditorComponent } from './deck-editor/deck-editor.component';
 import { ActivatedRouteSnapshot, RouterModule } from '@angular/router';
 import { DeckEditorFormComponent } from './shared/deck-editor-form/deck-editor-form.component';
+import { DeckCreatorComponent } from './deck-creator/deck-creator.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { DeckEditorFormComponent } from './shared/deck-editor-form/deck-editor-f
     DecksComponent,
     DeckDetailsComponent,
     DeckEditorComponent,
-    DeckEditorFormComponent
+    DeckEditorFormComponent,
+    DeckCreatorComponent
   ],
   imports: [
     BrowserModule,
