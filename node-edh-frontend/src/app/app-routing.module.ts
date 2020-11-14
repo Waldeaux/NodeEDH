@@ -8,6 +8,7 @@ import { DecksComponent } from './decks/decks.component';
 import { InventoryEditorComponent } from './inventory-editor/inventory-editor.component';
 import { InventoryEditorRoutingService } from './inventory-editor/services/inventory-editor-routing.service';
 import { InventoryEditorService } from './inventory-editor/services/inventory-editor.service';
+import { NeededCardsComponent } from './needed-cards/needed-cards.component';
 
 const routes: Routes = [
   {
@@ -35,6 +36,10 @@ const routes: Routes = [
     resolve:{
       inventory:InventoryEditorRoutingService
     }
+  },
+  {
+    component:NeededCardsComponent,
+    path:'needed-cards'
   }
 ];
 

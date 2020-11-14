@@ -1,0 +1,6 @@
+<a href="..">Home</a>
+<div *ngIf="deckDetails$ | async as details">
+    <div *ngFor="let card of details" class="card-entry">
+        {{card.dcCount - card.iCount}}x {{card.name}}
+    </div>
+</div>

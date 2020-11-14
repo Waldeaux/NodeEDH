@@ -173,6 +173,11 @@ async function main(){
         res.end(JSON.stringify([]));
     })
 
+    app.get('/inventory/comparison', async function(req, res){
+        await getNeededCards().then(result =>{
+            res.end(JSON.stringify(result));
+        })
+    })
     app.put('/inventory', async function(req, res){
         let promiseArray = [];
         let inventory = req.body.inventory;
@@ -195,9 +200,6 @@ async function main(){
             })
         })
         .then(resolve =>{
-            console.log(resolve);
-            console.log(cardIdList);
-            
             let promiseArray = [];
             //Order the submitted cards by card id
             cardIdList = cardIdList.sort((a,b) =>{
@@ -346,6 +348,19 @@ function createDeck(name){
 
 function getInventory(){
     let query = "SELECT c.name, i.count FROM NodeEDH.inventory i left join NodeEDH.cards c on c.id = i.idcards;";
+    return new Promise(resolve =>{
+        con.query(query, function(err, result){
+            resolve(result);
+        })
+    })
+}
+
+function getNeededCards(){
+    let query = "select c.name, SUM(dc.count) as dcCount, if(ic.iCount is null, 0, ic.iCount) as iCount from deck_cards dc left join cards c on c.id = dc.card_id";
+    query += " left join (select SUM(count) as iCount, c.name from inventory i left join cards c on c.id = i.idcards group by c.name) ic on c.name = ic.name";
+    query += " group by c.name";
+    query += " having dcCount > iCount";
+    query += " order by c.name";
     return new Promise(resolve =>{
         con.query(query, function(err, result){
             resolve(result);
