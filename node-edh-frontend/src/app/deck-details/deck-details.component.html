@@ -2,9 +2,10 @@
 <ng-container *ngIf="!(loading$ | async); else loading">
 <div *ngIf="deckDetails$ | async as details">
     {{details.name}}
-    <div *ngFor="let card of details.cards" class="card-entry">
+    <div *ngFor="let card of details.cards">
+        <span  class="card-entry">
         {{card.count}}x {{card.name}}
-        <img src="https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={{card.multiverseId}}&type=card">
+        <img src="https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={{card.multiverseId}}&type=card"></span>
     </div>
 </div>
 
