@@ -40,8 +40,8 @@ export class DeckEditorComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  submitForm(){
-    this.deckEditorService.updateDeckDetails(this.deckId, this.parseFormInput());
+  submitForm(formValues){
+    this.deckEditorService.updateDeckDetails(this.deckId, formValues);
     this.subscriptions.add(this.deckEditorService.busy$.pipe(
       filter(x =>{
         return !x
@@ -52,36 +52,24 @@ export class DeckEditorComponent implements OnInit, OnDestroy {
     ).subscribe());
   }
 
-  parseFormInput(){
-    let cards = [];
-    let formValues = this.deckEditor.get('cards').value.split('\n');
-    let resultObject = {};
-    formValues.forEach(x =>{
-      let lineSplit = x.split(' ');
-      if(!lineSplit[1]){
-        return;
-      }
-      const cardText = lineSplit.slice(1, lineSplit.length).join().replace(/,/g, ' ').toUpperCase();
-      if(!resultObject[cardText]){
-        resultObject[cardText] = 0;
-      }
-      const cardCount = Number.parseInt(lineSplit[0].replace(/a-zA-Z/g, ''));
-      resultObject[cardText] += cardCount;
-    })
-    Object.keys(resultObject).forEach(x =>{
-      cards.push({cardText:x, count:resultObject[x]});
-    })
-    let result = {cards,
-    name:this.deckEditor.get('name').value};
-    return result;
-  }
-
   parseApiInput(input:Card[]):string{
     let result = "";
     input.forEach(x =>{
       result += `${x.count}x ${x.name}\n`;
     })
     return result;
+  }
+
+  deleteDeck(){
+    this.deckEditorService.deleteDeck(this.deckId);
+    this.subscriptions.add(this.deckEditorService.busy$.pipe(
+      filter(x =>{
+        return !x
+      }),
+      tap(x =>{
+        this.router.navigate(['..']);
+      })
+    ).subscribe());
   }
 
 }

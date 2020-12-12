@@ -34,8 +34,8 @@ export class DeckCreatorComponent implements OnInit {
     this.subscriptions.unsubscribe();
   }
 
-  submitForm(){
-    this.deckCreatorService.createDeck(this.parseFormInput());
+  submitForm(values){
+    this.deckCreatorService.createDeck(values);
     this.subscriptions.add(this.deckCreatorService.busy$.pipe(
       filter(x =>{
         return !x
@@ -44,30 +44,6 @@ export class DeckCreatorComponent implements OnInit {
         this.router.navigate(['details', this.deckCreatorService.data$.value]);
       })
     ).subscribe());
-  }
-
-  parseFormInput(){
-    let cards = [];
-    let formValues = this.deckEditor.get('cards').value.split('\n');
-    let resultObject = {};
-    formValues.forEach(x =>{
-      let lineSplit = x.split(' ');
-      if(!lineSplit[1]){
-        return;
-      }
-      const cardText = lineSplit.slice(1, lineSplit.length).join().replace(/,/g, ' ').toUpperCase();
-      if(!resultObject[cardText]){
-        resultObject[cardText] = 0;
-      }
-      const cardCount = Number.parseInt(lineSplit[0].replace(/a-zA-Z/g, ''));
-      resultObject[cardText] += cardCount;
-    })
-    Object.keys(resultObject).forEach(x =>{
-      cards.push({cardText:x, count:resultObject[x]});
-    })
-    let result = {cards,
-    name:this.deckEditor.get('name').value};
-    return result;
   }
 
   parseApiInput(input:Card[]):string{

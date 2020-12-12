@@ -23,4 +23,13 @@ export class DeckEditorService {
       })
     ).subscribe();
   }
+
+  deleteDeck(id){
+    this.busy$.next(true);
+    this.http.delete(`http://localhost:8081/decks/${id}`).pipe(
+      tap(x=>{
+        this.busy$.next(false);
+      })
+    ).subscribe();
+  }
 }

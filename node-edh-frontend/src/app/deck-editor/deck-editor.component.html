@@ -1,4 +1,5 @@
 <a href="..">Home</a>
+<span (click)="deleteDeck()">Delete</span>
 <ng-container *ngIf="!(loading$ | async);else loading">
     <app-deck-editor-form [deckEditor]="deckEditor" (submitListener)="submitForm($event)"></app-deck-editor-form>
 </ng-container>
