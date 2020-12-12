@@ -47,7 +47,7 @@ export class InventoryEditorComponent implements OnInit, OnDestroy {
         return !x
       }),
       tap(x =>{
-        this.router.navigate(['']);
+        //this.router.navigate(['']);
       })
     ).subscribe());
   }
@@ -56,11 +56,14 @@ export class InventoryEditorComponent implements OnInit, OnDestroy {
     let formValues = this.form.get('inventory').value.split('\n');
     let resultObject = {};
     formValues.forEach(x =>{
+      x = x.replace(/[,'"\-]/g, '').replace(/[ ]+/g,' ');
       let lineSplit = x.split(' ');
       if(!lineSplit[1]){
         return;
       }
-      const cardText = lineSplit.slice(1, lineSplit.length).join().replace(/,/g, ' ').toUpperCase();
+      let cardText = lineSplit.slice(1, lineSplit.length).join();
+      cardText = cardText.replace(/,/g, ' ').toUpperCase();
+      cardText = cardText.replace(/\([A-ZA-Z0-9]*\)/g, '').replace(/\*F\*/g,'').replace(/[ ]+/g, ' ').trim();
       if(!resultObject[cardText]){
         resultObject[cardText] = 0;
       }
