@@ -56,18 +56,39 @@ export class InventoryEditorComponent implements OnInit, OnDestroy {
     let formValues = this.form.get('inventory').value.split('\n');
     let resultObject = {};
     formValues.forEach(x =>{
-      x = x.replace(/[,'"\-]/g, '').replace(/[ ]+/g,' ');
+      /*
+        Remove characters for standardized names
+          '
+          ,
+          \
+          -
+          "
+        Reduce multiple spaces to a single space
+      */
+      x = x.replace(/[',\-\"]*/g, '').replace(/[ ]+/g, ' ');
+      //Divide by spaces
       let lineSplit = x.split(' ');
-      if(!lineSplit[1]){
+
+      //If first space, contains any numbers, consider the number only string to be count
+      //Otherwise, consider count to be 1
+      const cardCountString = lineSplit[0].replace(/[^0-9]*/g, '');
+      let cardCount = 1;
+      let nameindex = 1;
+      if(cardCountString == ''){
+        nameindex = 0;
+      }
+      else{
+        cardCount = Number.parseInt(cardCountString);
+      }
+
+      //Create name
+      const cardText = lineSplit.slice(nameindex, lineSplit.length).join().toUpperCase();
+      if(cardText == ''){
         return;
       }
-      let cardText = lineSplit.slice(1, lineSplit.length).join();
-      cardText = cardText.replace(/,/g, ' ').toUpperCase();
-      cardText = cardText.replace(/\([A-ZA-Z0-9]*\)/g, '').replace(/\*F\*/g,'').replace(/[ ]+/g, ' ').trim();
       if(!resultObject[cardText]){
         resultObject[cardText] = 0;
       }
-      const cardCount = Number.parseInt(lineSplit[0].replace(/a-zA-Z/g, ''));
       resultObject[cardText] += cardCount;
     })
     Object.keys(resultObject).forEach(x =>{
@@ -75,5 +96,9 @@ export class InventoryEditorComponent implements OnInit, OnDestroy {
     })
     let result = {inventory};
     return result;
+  }
+
+  removeTappedOutFormat(cardText:string){
+    return cardText.replace(/\([A-ZA-Z0-9]*\)/g, '').replace(/\*F\*/g,'').replace(/[ ]+/g, ' ').trim();
   }
 }
