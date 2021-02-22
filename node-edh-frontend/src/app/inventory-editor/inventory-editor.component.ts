@@ -15,16 +15,28 @@ export class InventoryEditorComponent implements OnInit, OnDestroy {
   subscriptions = new Subscription();
   form:FormGroup;
   loading$:Observable<boolean>;
+
+  initialForm:any;
   constructor(private fb: FormBuilder,
     private route:ActivatedRoute,
     private router:Router,
     private inventoryEditorService:InventoryEditorService) { 
     this.loading$ = this.inventoryEditorService.onBusyChanges();
-    this.route.data.subscribe(response =>{
-    this.form = this.fb.group({
-      inventory:this.parseApiInput(response.inventory)
+
+    this.route.data.subscribe((response) =>{
+      this.initialForm = {};
+      response.inventory.forEach((element:InventoryCard) => {
+        let key = this.parseStandardizedName(element.name).toUpperCase();
+        if(!this.initialForm[key]){
+          this.initialForm[key] = 0;
+        }
+        this.initialForm[key] += element.count;
+      });
+
+      this.form = this.fb.group({
+        inventory:this.parseApiInput(response.inventory)
+      });
     })
-  })
   }
 
   ngOnInit(): void {
@@ -82,7 +94,7 @@ export class InventoryEditorComponent implements OnInit, OnDestroy {
       }
 
       //Create name
-      const cardText = lineSplit.slice(nameindex, lineSplit.length).join().toUpperCase();
+      const cardText = lineSplit.slice(nameindex, lineSplit.length).join(' ').toUpperCase();
       if(cardText == ''){
         return;
       }
@@ -92,13 +104,25 @@ export class InventoryEditorComponent implements OnInit, OnDestroy {
       resultObject[cardText] += cardCount;
     })
     Object.keys(resultObject).forEach(x =>{
-      inventory.push({cardText:x, count:resultObject[x]});
+      if(!this.initialForm[x] || this.initialForm[x] != resultObject[x]){
+        inventory.push({cardText:x, count:resultObject[x]});
+      }
+    })
+    Object.keys(this.initialForm).forEach(x =>{
+      if(!resultObject[x]){
+        inventory.push({cardText:x, count:0});
+      }
     })
     let result = {inventory};
+    console.log(result);
     return result;
   }
 
   removeTappedOutFormat(cardText:string){
     return cardText.replace(/\([A-ZA-Z0-9]*\)/g, '').replace(/\*F\*/g,'').replace(/[ ]+/g, ' ').trim();
+  }
+
+  parseStandardizedName(text:string){
+    return text.replace(/[',\-\"]*/g, '');
   }
 }

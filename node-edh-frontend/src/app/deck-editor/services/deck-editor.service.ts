@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { catchError, finalize, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +19,9 @@ export class DeckEditorService {
     this.busy$.next(true);
     this.http.put(`http://localhost:8081/decks/${id}`, body).pipe(
       tap(x=>{
+        console.log(x);
+      }),
+      finalize(() =>{
         this.busy$.next(false);
       })
     ).subscribe();

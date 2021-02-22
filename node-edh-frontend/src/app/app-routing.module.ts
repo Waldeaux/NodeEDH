@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
+import { CardDetailsComponent } from './card-details/card-details.component';
 import { DeckCreatorComponent } from './deck-creator/deck-creator.component';
 import { DeckDetailsComponent } from './deck-details/deck-details.component';
 import { DeckEditorComponent } from './deck-editor/deck-editor.component';
@@ -29,6 +30,10 @@ const routes: Routes = [
   {
     component:DeckCreatorComponent,
     path:'deck-creator'
+  },
+  {
+    component:CardDetailsComponent,
+    path:'card-details/:id'
   },
   {
     component:InventoryEditorComponent,

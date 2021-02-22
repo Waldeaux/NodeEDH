@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, finalize, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -12,15 +12,34 @@ export class DeckCreatorService {
 
   data$ = new BehaviorSubject<number>(null);
   busy$ = new BehaviorSubject<boolean>(false);
+  success$ = new BehaviorSubject<boolean>(false);
+  error$ = new BehaviorSubject<string>("");
 
   busyChanges():Observable<boolean>{
     return this.busy$.asObservable();
   }
+
+  successChanges():Observable<boolean>{
+    return this.success$.asObservable();
+  }
+
+  errorChanges():Observable<string>{
+    return this.error$.asObservable();
+  }
+
   createDeck(body){
     this.busy$.next(true);
     this.http.post<number>(`http://localhost:8081/decks`, body).pipe(
       tap(x=>{
         this.data$.next(x);
+        this.success$.next(true);
+      }),
+      catchError(x =>{
+        this.error$.next(x.error);
+        this.success$.next(false);
+        return of(null)
+      }),
+      finalize(() =>{
         this.busy$.next(false);
       })
     ).subscribe();

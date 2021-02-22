@@ -13,6 +13,7 @@ import { DeckEditorFormComponent } from './shared/deck-editor-form/deck-editor-f
 import { DeckCreatorComponent } from './deck-creator/deck-creator.component';
 import { InventoryEditorComponent } from './inventory-editor/inventory-editor.component';
 import { NeededCardsComponent } from './needed-cards/needed-cards.component';
+import { CardDetailsComponent } from './card-details/card-details.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +24,8 @@ import { NeededCardsComponent } from './needed-cards/needed-cards.component';
     DeckEditorFormComponent,
     DeckCreatorComponent,
     InventoryEditorComponent,
-    NeededCardsComponent
+    NeededCardsComponent,
+    CardDetailsComponent
   ],
   imports: [
     BrowserModule,

@@ -6,7 +6,9 @@ app.use(express.json({limit:'10mb'}));
 app.use(cors());
 var https = require('https');
 const { resolve } = require('path');
+const { rejects } = require('assert');
 var con;
+var errorArray = [];
 main();
 async function main(){
     con = mysql.createConnection({
@@ -41,7 +43,7 @@ async function main(){
                 resolve(result[0]);
             })
         }).then(resolve =>{
-            let query = "SELECT if(c.layout in ('adventure', 'transform', 'modal_dfc', 'flip', 'meld'), c.faceName,c.name) as name, dc.count, c.multiverseId FROM NodeEDH.cards as c join NodeEDH.deck_cards as dc on dc.card_id = c.id where dc.deck_id = " + req.params.id + " order by name;"
+            let query = "SELECT if(c.layout in ('adventure', 'transform', 'modal_dfc', 'flip', 'meld'), c.faceName,c.name) as name, dc.count, c.multiverseId, c.id FROM NodeEDH.cards as c join NodeEDH.deck_cards as dc on dc.card_id = c.id where dc.deck_id = " + req.params.id + " order by name;"
             con.query(query, function(err, result){
                 let resultObject = {
                     name:resolve.name,
@@ -57,12 +59,18 @@ async function main(){
         let name = req.body.name;
         let cards = req.body.cards;
         let promiseArray = [];
+        errorArray = [];
         let deckId = -1;
         let cardsList = [];
         cards.forEach(x =>{
             promiseArray.push(getCard(x));
         })
         await Promise.all(promiseArray).then(resolve =>{
+            console.log(errorArray);
+            if(errorArray.length > 0){
+                
+                return Promise.reject(errorArray.map(x => x.name).join(', '));
+            }
             cardsList = resolve;
             return createDeck(name);
         })
@@ -74,9 +82,18 @@ async function main(){
             })
 
             return Promise.all(promiseArray);
+        })
+        .then(resolve =>{
+                res.write(deckId.toString());
+                return true;
+            }
+        )
+        .catch(error =>{
+            console.log("failed");
+            res.status(400);
+            res.write(`Cards not found: ${error}`);
         });
-
-        res.end(deckId.toString());
+        res.end();
         
     })
     app.get('/inventory', async function(req, res){
@@ -190,6 +207,21 @@ async function main(){
         });
     })
 
+    app.get('/cards/:id', async function(req, res){
+        let cardId = req.params.id;
+        let inventoryCount = await getInventoryCount(cardId);
+        console.log(inventoryCount);
+        let decks = await getDecksByCard(cardId);
+        console.log(decks);
+        let result = {
+            name:decks.name,
+            total:inventoryCount,
+            locations:decks.locations,
+            unused:inventoryCount - decks.locations.map(x => x.count).reduce((accumulator, currentValue) => accumulator + currentValue)
+        }
+        console.log(result);
+        res.end(JSON.stringify(result));
+    })
     app.delete('/decks/:id', async function(req, res){
         let deckId = req.params.id;
         await deleteDeck(deckId);
@@ -242,11 +274,16 @@ async function main(){
                     let cardExists = false;
                     let countSame = false;
                     let index = -1;
+                    let deleteCard = false;
+                    console.log(submitCard);
                     resolve.forEach((currentCard, key) =>{
                         if(submitCard.id === currentCard.idcards){
                             cardExists = true;
                             index = key;
-                            if(submitCard.count === currentCard.count){
+                            if(submitCard.count === 0){
+                                deleteCard = true;
+                            }
+                            else if(submitCard.count === currentCard.count){
                                 countSame = true;
                             }
                             return false;
@@ -255,9 +292,13 @@ async function main(){
                             return false;
                         }
                     })
+
+                    if(deleteCard){
+                        promiseArray.push(deleteInventoryCard(submitCard.id));
+                    }
                     //If the card already exists in that deck, update the record if the count is different
                     //Then remove the card from the currentDeckList for optimization and removal later on
-                    if(cardExists){
+                    else if(cardExists){
                         if(!countSame){
                             //Update
                             promiseArray.push(updateInventoryCardCount(submitCard.id, submitCard.count))
@@ -271,11 +312,6 @@ async function main(){
                         promiseArray.push(insertInventoryCard(submitCard.id,submitCard.count))
                     }
                 });
-                //Any cards remaining in the current deck array need to be removed. They are not in the most recently submitted deck list
-                resolve.forEach(currentCard =>{
-                    //Delete
-                    promiseArray.push(deleteInventoryCard(currentCard.idcards))
-                })
 
                 return Promise.all(promiseArray).then(x =>{
                     Promise.resolve();
@@ -299,8 +335,13 @@ function getCard(card){
     let query = `select id from NodeEDH.cards where standardized_name = "${name}" limit 1;`
     return new Promise(resolve =>{
         con.query(query, function(err, result){
-            console.log(card);
-            resolve({id:result[0].id, count:card.count});
+            if(result.length == 0){
+                errorArray.push({error:true, name});
+                resolve({error:true, name});
+            }
+            else{
+                resolve({id:result[0].id, count:card.count});
+            }
         })
     })
 }
@@ -363,6 +404,22 @@ function deleteInventoryCard(cardId){
         })
     })
 }
+
+function getDecksByCard(cardId){
+    let query = "select d.name as locations, dc.count, c.name as cardName from cards c "
+    query += "join cards name_cards on c.name = name_cards.name "
+    query += "join deck_cards dc on name_cards.id = dc.card_id "
+    query += "left join decks d on dc.deck_id = d.iddecks "
+    query += `where c.id = ${cardId};`
+    return new Promise(resolve =>{
+        con.query(query, function(err, result){
+            console.log(result);
+            resolve({
+                name:result[0].cardName,
+                locations:result.map(x => {return {location:x.locations,count:x.count}})});
+        })
+    })
+}
 function deleteDeckCard(deckId, cardId){
     let query = "Delete from `NodeEDH`.`deck_cards` WHERE deck_id = "+deckId+" and card_id = " + cardId +";"
     return new Promise(resolve =>{
@@ -372,6 +429,18 @@ function deleteDeckCard(deckId, cardId){
     })
 }
 
+function getInventoryCount(cardId){
+    let query = "select SUM(i.count) as count from cards c "
+    query += "join cards name_cards on c.name = name_cards.name "
+    query += "left join inventory i on name_cards.id = i.idcards "
+    query += `where c.id = ${cardId};`
+        return new Promise(resolve =>{
+            con.query(query, function(err, result){
+            resolve(result[0].count);
+        })
+    })
+    
+}
 function updateDeckName(deckId, name){
     let query = "UPDATE `NodeEDH`.`decks` set `name` = \"" + name+ "\" WHERE iddecks = "+deckId +";"
     return new Promise(resolve =>{

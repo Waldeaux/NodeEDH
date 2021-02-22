@@ -1,0 +1,7 @@
+<ng-container *ngIf="(data$ | async) as data">
+    {{data.name}}
+    <div *ngFor="let location of data.locations">
+        {{location.location}} ({{location.count}})
+    </div>
+    <div>Unused: {{data.unused}}</div>
+</ng-container>

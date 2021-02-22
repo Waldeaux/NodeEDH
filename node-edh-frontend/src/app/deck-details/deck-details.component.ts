@@ -30,4 +30,7 @@ export class DeckDetailsComponent implements OnInit {
     this.router.navigate(['deck-editor', this.id]);
   }
 
+  goToCardDetails(id:number){
+    this.router.navigate(['card-details', id]);
+  }
 }

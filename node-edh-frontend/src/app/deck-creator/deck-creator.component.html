@@ -1,4 +1,7 @@
 <a href="..">Home</a>
+<ng-container *ngIf="(error$ | async) as error">
+    {{error}}
+</ng-container>
 <ng-container *ngIf="!(loading$ | async);else loading">
     <app-deck-editor-form [deckEditor]="deckEditor" (submitListener)="submitForm($event)"></app-deck-editor-form>
 </ng-container>

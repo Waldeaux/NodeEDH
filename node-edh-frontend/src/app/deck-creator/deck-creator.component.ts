@@ -19,11 +19,12 @@ export class DeckCreatorComponent implements OnInit {
     private router:Router) { }
 
     loading$:Observable<boolean>;
+    error$:Observable<string>;
   deckEditor:FormGroup;
   subscriptions = new Subscription();
   ngOnInit(): void {
     this.loading$ = this.deckCreatorService.busyChanges();
-    
+    this.error$ = this.deckCreatorService.errorChanges();
     this.deckEditor = this.formBuilder.group({
       "name":'',
       "cards": ''
@@ -36,10 +37,12 @@ export class DeckCreatorComponent implements OnInit {
 
   submitForm(values){
     this.deckCreatorService.createDeck(values);
-    this.subscriptions.add(this.deckCreatorService.busy$.pipe(
-      filter(x =>{
-        return !x
+    this.subscriptions.add(this.deckCreatorService.successChanges().pipe(
+      tap(x =>{
+        console.log(x)
       }),
+      filter(x => x
+      ),
       tap(x =>{
         this.router.navigate(['details', this.deckCreatorService.data$.value]);
       })

@@ -7,4 +7,5 @@ export interface Card{
     name:string;
     count:number;
     multiverseId:number;
+    id:number;
 }

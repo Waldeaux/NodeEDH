@@ -3,7 +3,7 @@
 <div *ngIf="deckDetails$ | async as details">
     {{details.name}}
     <div *ngFor="let card of details.cards">
-        <span  class="card-entry">
+        <span class="card-entry" (click)="goToCardDetails(card.id)">
         {{card.count}}x {{card.name}}
         <img src="https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={{card.multiverseId}}&type=card"></span>
     </div>
