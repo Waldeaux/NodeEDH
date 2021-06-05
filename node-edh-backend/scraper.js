@@ -5,11 +5,13 @@ var page;
 var con;
 var query = "";
 var queryValues = [];
+var frontFaces = [];
 var symbolSwitch = symbolSwitchFunction;
 main();
 async function main(){
     //await testInsertScrape();
     await insertScraping();
+    //await getCardsById();
     await queryDb();
 }
 async function queryDb(){
@@ -26,9 +28,7 @@ async function queryDb(){
             resolve();
         });
     })
-    console.log("connecting to database");
     await promise;
-    console.log("connected to database");
     await new Promise(resolve => {
         con.query(query, [queryValues], function(err, result){
             if(err) {
@@ -41,6 +41,46 @@ async function queryDb(){
     console.log("success!");
 }
 
+async function getCardsById(){
+    const cards = [
+        {
+            id:503657,
+            firstAppend:'_ctl03',
+            secondAppend:'_ctl04'
+        },
+        
+        {
+            id:503646,
+            firstAppend:'_ctl03',
+            secondAppend:'_ctl04'
+        },
+        
+        
+        {
+            id:503766,
+            firstAppend:'_ctl03',
+            secondAppend:'_ctl04'
+        }
+        ];
+    const browser = await puppeteer.launch({
+        headless: false,
+    });
+    page = (await browser.pages())[0];
+    await page.goto('https://gatherer.wizards.com/Pages/Advanced.aspx');
+    const newPagePromise = new Promise(x => browser.once('targetcreated', target => x(target.page())));    // declare promise
+    await page.click('#wizardCookieBannerOptOut');
+    const newPage = await newPagePromise;
+    await newPage.close();
+    //cards.forEach(async function (element) {
+        for(const id of cards){
+        await Promise.all([
+            page.waitForNavigation(),
+            page.goto('https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid='+id.id),
+        ]);
+        await insertModalCard(id.firstAppend, id.secondAppend);
+    }
+    //})
+}
 async function multiverseIdScraping(){
     
     const browser = await puppeteer.launch({
@@ -102,7 +142,7 @@ async function multiverseIdScraping(){
 async function insertScraping(){
     
     const browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
     });
     page = (await browser.pages())[0];
     await page.goto('https://gatherer.wizards.com/Pages/Advanced.aspx');
@@ -110,7 +150,7 @@ async function insertScraping(){
     await page.click('#wizardCookieBannerOptOut');
     const newPage = await newPagePromise;
     await newPage.close();
-    await page.type('#autoCompleteSourceBoxsetAddText0_InnerTextBox', 'Kaldheim');
+    await page.type('#autoCompleteSourceBoxsetAddText0_InnerTextBox', 'School of Mages');
     await page.click('#ctl00_ctl00_MainContent_Content_setAdd');
     await Promise.all([
         page.waitForNavigation(),
@@ -136,16 +176,25 @@ async function insertScraping(){
             const multiverseId = Number.parseInt(result.split('=')[1]);
             let layoutAppend = '';
             let name = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_subtitleDisplay`);
-            console.log(name);
             let layoutTest = await page.$(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_ArtistCredit`);
             if(!layoutTest){
-                await Promise.all([
-                    page.waitForNavigation(),
-                    page.goBack()
-                ]);
-                    x++;
-                    continue;
+                let firstVariationLinkIds = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 a.variationLink`, nodes => nodes.map(n => n.id));
+                let secondVariationLinkIds = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent1 a.variationLink`, nodes => nodes.map(n => n.id));
+                let isFront = firstVariationLinkIds.every(x =>{
+                    return secondVariationLinkIds.includes((parseInt(x)+1).toString());
+                });
+                if(isFront)
+                {
+                    let faceName = await getInnerContent(`[id*=rightCol] [id*=nameRow] .value`);
+                    console.log(faceName);
+                }
             }
+            await Promise.all([
+                page.waitForNavigation(),
+                page.goBack()
+            ]);
+                x++;
+                continue;
             //name = name.replace(/`/g, `\\\``);
             let artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_artistRow .value a`);
             let cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_cmcRow .value`);
@@ -214,7 +263,7 @@ async function insertScraping(){
             let subtypeString = subtypes.join(',');
             let flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_FlavorText .value`);
             let rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_rarityRow .value span`);
-            let setCode = 'KHM';
+            let setCode = 'STA';
             let standardized_name = name.replace(/[',\-]*/g, '');
         
             let colors = [];
@@ -297,9 +346,172 @@ async function insertScraping(){
         }
     }
     page.close();
-    console.log("done scraping");
 }
 
+async function insertModalCard(firstAppend, secondAppend){
+    const url = page.url();
+    const regex = /\bmultiverseid=\b[0-9]+[?]?/;
+    const result = url.match(regex)[0];
+    const multiverseId = Number.parseInt(result.split('=')[1]);
+    let layoutAppend = '';
+    await Promise.all([
+        page.waitForSelector(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_nameRow .value`)
+    ]);
+    let faceName = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_nameRow .value`);
+    let backName = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${secondAppend}_nameRow .value`);
+    let artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_ArtistCredit a`);
+    let cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_cmcRow .value`);
+    let number = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_numberRow .value`);
+    let type = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_typeRow .value`)
+    let imageChildren = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_textRow img`, nodes => nodes.map(n => n.alt));
+    imageChildren = imageChildren.map(x => symbolSwitch(x));
+    let text = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_textRow .cardtextbox`, nodes => nodes.map(n => n.innerHTML));
+    let textString= text.join('\n');
+    for(let x = 0; x < imageChildren.length; x++){
+        textString = textString.replace(/<img[ A-Za-z0-9?;&="\/.]+>/, `{${imageChildren[x]}}`);
+    }
+    let backText = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_textRow .cardtextbox`, nodes => nodes.map(n => n.innerHTML));
+    let backTextString= backText.join('\n');
+    for(let x = 0; x < imageChildren.length; x++){
+        backTextString = backTextString.replace(/<img[ A-Za-z0-9?;&="\/.]+>/, `{${imageChildren[x]}}`);
+    }
+    let manaCost = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_manaRow .value img`, nodes => nodes.map(n => n.alt));
+    let manaCostText = manaCost.map(x =>symbolSwitch(x)
+    ).join('}{');
+    if(manaCostText.length >0){
+        manaCostText = `{${manaCostText}}`
+    }
+    let backManaCost = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${secondAppend}_manaRow .value img`, nodes => nodes.map(n => n.alt));
+    let backManaCostText = backManaCost.map(x =>symbolSwitch(x)
+    ).join('}{');
+    if(backManaCostText.length >0){
+        backManaCostText = `{${backManaCostText}}`
+    }
+    let ptType = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_ptRow .label`);
+
+    let ptText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_ptRow .value`);
+    let power = 0;
+    let toughness = 0;
+    let loyalty = 0;
+    if(ptType == 'Loyalty:'){
+        loyalty = ptText;
+    }
+    else{
+        let pt = ptText.split('/');
+        if(pt.length > 1){
+            power = pt[0].trim();
+            toughness = pt[1].trim();
+        }
+    }
+    let typeArray = type.split(/[ ]+/);
+    let typeindex = typeArray.indexOf('—');
+    let subtypesFound = true;
+    let supertypes = [];
+    let subtypes = [];
+    let possibleTypes = ['Land', 'Creature', 'Artifact', 'Planeswalker', 'Sorcery', 'Instant', 'Enchantment', 'Tribal'];
+    let types = [];
+    if(typeindex == -1){
+        typeindex = typeArray.length;
+        subtypesFound = false;
+    }
+    if(typeindex > 0){
+        if(subtypesFound){
+            supertypes = typeArray.slice(0, typeindex);
+        }
+        else{
+            supertypes = typeArray;
+        }
+    }
+    if(subtypesFound){
+        subtypes = typeArray.slice(typeindex + 1, typeArray.length + 1);
+    }
+
+    supertypes.forEach((element, index) => {
+        if(possibleTypes.includes(element)){
+            supertypes.splice(index, 1);
+            types.push(element);
+        }
+    });
+    let typeString = types.join(',');
+    let supertypeString = supertypes.join(',');
+    let subtypeString = subtypes.join(',');
+    let flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_FlavorText .value`);
+    let rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_rarityRow .value span`);
+    let setCode = 'KHM';
+    let standardized_name = faceName.replace(/[',\-]*/g, '');
+
+    let colors = [];
+    let colorIdentity = [];
+    let combinedTextString = textString + ' ' + backTextString;
+    let possibleColors = ['W', 'U', 'B', 'R', 'G'];
+    possibleColors.forEach(x =>{
+        if(colorIdentitySearch(x, manaCostText)){
+            colors.push(x);
+        }
+    })
+    let combinedManaCostText = manaCostText + ' ' + backManaCostText;
+    possibleColors.forEach(x =>{
+        if(colorIdentitySearch(x, combinedManaCostText)){
+            colorIdentity.push(x);
+        }
+        else if(colorIdentitySearch(x, combinedTextString)){
+            colorIdentity.push(x);
+        }
+    })
+    let colorString = colors.join(',');
+    let colorIdentityString = colorIdentity.join(',');
+
+    let combinedName = faceName + ' // ' + backName;
+
+    //textString = textString.replace(/'/g, `\\\'`);
+    query = " INSERT INTO cards"
+    + "(artist,"
+    + "colorIdentity,"
+    + "colors,"
+    + "convertedManaCost,"
+    + "flavorText,"
+    + "loyalty,"
+    + "manaCost,"
+    + "multiverseId,"
+    + "faceName,"
+    + "name,"
+    + "number,"
+    + "uuid,"
+    + "power,"
+    + "rarity,"
+    + "setCode,"
+    + "subtypes,"
+    + "supertypes,"
+    + "text,"
+    + "toughness,"
+    + "type,"
+    + "types,"
+    + "standardized_name)"
+    + "VALUES ?";
+    queryValues.push([artist,
+    colorIdentityString,
+    colorString,
+    cmc,
+    flavorText,
+    loyalty,
+    manaCostText,
+    multiverseId,
+    faceName,
+    combinedName,
+    number,
+    number+"-" +setCode,
+    power,
+    rarity,
+    setCode,
+    subtypeString,
+    supertypeString,
+    textString,
+    toughness,
+    type,
+    typeString,
+    standardized_name]);
+    return Promise.resolve();
+}
 async function getInnerContent(selector){
     let name = '';
     try{
@@ -307,7 +519,8 @@ async function getInnerContent(selector){
         name = await page.evaluate(el => el.textContent, element);
         name = name.trim();
     }
-    catch{}
+    catch{
+    }
     return name;
 }
 
