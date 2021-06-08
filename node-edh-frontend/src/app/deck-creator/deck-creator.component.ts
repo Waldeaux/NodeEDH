@@ -27,6 +27,7 @@ export class DeckCreatorComponent implements OnInit {
     this.error$ = this.deckCreatorService.errorChanges();
     this.deckEditor = this.formBuilder.group({
       "name":'',
+      "draft":false,
       "cards": ''
     })
   }

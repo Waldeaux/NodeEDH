@@ -1,7 +1,7 @@
 <a href="..">Home</a>
 <ng-container *ngIf="!(loading$ | async); else loading">
 <div *ngIf="deckDetails$ | async as details">
-    {{details.name}}
+    {{details.name}} {{totalCount}}
     <div *ngFor="let card of details.cards">
         <span class="card-entry" (click)="goToCardDetails(card.id)">
         {{card.count}}x {{card.name}}

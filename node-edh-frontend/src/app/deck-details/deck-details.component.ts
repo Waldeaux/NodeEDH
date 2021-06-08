@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { DeckDetails } from './models/deck-details.model';
 import { DeckDetailsService } from './services/deck-details.service';
 
@@ -18,11 +19,18 @@ export class DeckDetailsComponent implements OnInit {
   deckDetails$:Observable<DeckDetails>;
   loading$:Observable<boolean>;
   id :number;
+  totalCount:number;
   ngOnInit(): void {
     let id = Number.parseInt(this.route.snapshot.paramMap.get('id'));
     this.loading$ = this.deckDetailsService.busyChanges();
     this.id = id;
-    this.deckDetails$ = this.deckDetailsService.dataChanges();
+    this.deckDetails$ = this.deckDetailsService.dataChanges().pipe(
+      tap(response =>{
+        this.totalCount = 0;
+        response.cards.forEach(element => {
+          this.totalCount += element.count;
+        });
+      }));
     this.deckDetailsService.getDeckDetails(id);
   }
 

@@ -30,6 +30,7 @@ export class DeckEditorComponent implements OnInit, OnDestroy {
       let deck = response.deck;
       this.deckEditor = this.formBuilder.group({
         "name":deck.name,
+        "draft":deck.draft,
         "cards": this.parseApiInput(deck.cards)
       })
     })

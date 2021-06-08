@@ -24,7 +24,7 @@ export class DeckEditorFormComponent implements OnInit {
     let formValues = this.deckEditor.get('cards').value.split('\n');
     let resultObject = {};
     formValues.forEach(x =>{
-      x = x.replace(/[',\-]*/g, '');
+      x = x.replace(/[’',\-]*/g, '');
       let lineSplit = x.split(' ');
       const cardCountString = lineSplit[0].replace(/[^0-9]*/g, '');
       let cardCount = 1;
@@ -48,7 +48,8 @@ export class DeckEditorFormComponent implements OnInit {
       cards.push({cardText:x, count:resultObject[x]});
     })
     let result = {cards,
-    name:this.deckEditor.get('name').value};
+    name:this.deckEditor.get('name').value,
+  draft:this.deckEditor.get('draft').value};
     return result;
   }
 }

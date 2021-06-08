@@ -47,6 +47,7 @@ async function main(){
             con.query(query, function(err, result){
                 let resultObject = {
                     name:resolve.name,
+                    draft:resolve.draft,
                     cards:result
                 };
                 res.end(JSON.stringify(resultObject));
@@ -104,6 +105,7 @@ async function main(){
     app.put('/decks/:id', async function(req, res){
         let promiseArray = [];
         let name = req.body.name;
+        let draft = req.body.draft;
         let cards = req.body.cards;
         var cardIdList = [];
         let deckId = req.params.id;
@@ -127,7 +129,7 @@ async function main(){
             .then(resolve =>{
 
                 let promiseArray = [];
-                promiseArray.push(updateDeckName(deckId, name));
+                promiseArray.push(updateDeckName(deckId, name, draft));
                 //Order the submitted cards by card id
                 cardIdList = cardIdList.sort((a,b) =>{
                     if(a.id < b.id){
@@ -441,8 +443,9 @@ function getInventoryCount(cardId){
     })
     
 }
-function updateDeckName(deckId, name){
-    let query = "UPDATE `NodeEDH`.`decks` set `name` = \"" + name+ "\" WHERE iddecks = "+deckId +";"
+function updateDeckName(deckId, name,draft){
+    let query = "UPDATE `NodeEDH`.`decks` set `name` = \"" + name+ "\", `draft`=\"" + (draft ? 1:0) + "\" WHERE iddecks = "+deckId +";"
+    console.log(query);
     return new Promise(resolve =>{
         con.query(query, function(err, result){
             resolve();
@@ -471,6 +474,7 @@ function getInventory(){
 function getNeededCards(){
     let query = "select c.name, SUM(dc.count) as dcCount, if(ic.iCount is null, 0, ic.iCount) as iCount from deck_cards dc left join cards c on c.id = dc.card_id";
     query += " left join (select SUM(count) as iCount, c.name from inventory i left join cards c on c.id = i.idcards group by c.name) ic on c.name = ic.name";
+    query += " left join decks d on dc.deck_id = d.iddecks where d.draft = false"
     query += " group by c.name";
     query += " having dcCount > iCount";
     query += " order by c.name";
