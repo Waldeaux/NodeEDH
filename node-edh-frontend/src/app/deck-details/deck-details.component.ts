@@ -20,6 +20,7 @@ export class DeckDetailsComponent implements OnInit {
   loading$:Observable<boolean>;
   id :number;
   totalCount:number;
+  sideboardCount:number;
   ngOnInit(): void {
     let id = Number.parseInt(this.route.snapshot.paramMap.get('id'));
     this.loading$ = this.deckDetailsService.busyChanges();
@@ -27,9 +28,13 @@ export class DeckDetailsComponent implements OnInit {
     this.deckDetails$ = this.deckDetailsService.dataChanges().pipe(
       tap(response =>{
         this.totalCount = 0;
+        this.sideboardCount = 0;
         response.cards.forEach(element => {
           this.totalCount += element.count;
         });
+        response.sideboard.forEach(element =>{
+          this.sideboardCount += element.count;
+        })
       }));
     this.deckDetailsService.getDeckDetails(id);
   }

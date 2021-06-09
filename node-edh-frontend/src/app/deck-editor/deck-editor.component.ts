@@ -31,7 +31,8 @@ export class DeckEditorComponent implements OnInit, OnDestroy {
       this.deckEditor = this.formBuilder.group({
         "name":deck.name,
         "draft":deck.draft,
-        "cards": this.parseApiInput(deck.cards)
+        "cards": this.parseApiInput(deck.cards),
+        "sideboard": this.parseApiInput(deck.sideboard)
       })
     })
     
@@ -54,6 +55,9 @@ export class DeckEditorComponent implements OnInit, OnDestroy {
   }
 
   parseApiInput(input:Card[]):string{
+    if(!input){
+      return '';
+    }
     let result = "";
     input.forEach(x =>{
       result += `${x.count}x ${x.name}\n`;

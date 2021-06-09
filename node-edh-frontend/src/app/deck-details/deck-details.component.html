@@ -1,12 +1,22 @@
 <a href="..">Home</a>
 <ng-container *ngIf="!(loading$ | async); else loading">
 <div *ngIf="deckDetails$ | async as details">
-    {{details.name}} {{totalCount}}
+    <div>{{details.name}} </div>
+    <div>
+    <div>Mainboard {{totalCount}}</div>
     <div *ngFor="let card of details.cards">
         <span class="card-entry" (click)="goToCardDetails(card.id)">
         {{card.count}}x {{card.name}}
         <img src="https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={{card.multiverseId}}&type=card"></span>
     </div>
+</div>
+<div style="margin-top:20px">
+    <div>Sideboard {{sideboardCount}}</div>
+    <div *ngFor="let card of details.sideboard">
+        <span class="card-entry" (click)="goToCardDetails(card.id)">
+        {{card.count}}x {{card.name}}
+        <img src="https://gatherer.wizards.com/Handlers/Image.ashx?multiverseid={{card.multiverseId}}&type=card"></span>
+    </div></div>
 </div>
 
 <button (click)="edit()">Edit</button></ng-container>

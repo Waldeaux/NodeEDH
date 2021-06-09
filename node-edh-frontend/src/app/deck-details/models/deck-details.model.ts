@@ -1,6 +1,7 @@
 export interface DeckDetails{
     name:string;
     cards:Card[];
+    sideboard:Card[];
 }
 
 export interface Card{

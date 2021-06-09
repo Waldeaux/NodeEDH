@@ -28,7 +28,8 @@ export class DeckCreatorComponent implements OnInit {
     this.deckEditor = this.formBuilder.group({
       "name":'',
       "draft":false,
-      "cards": ''
+      "cards": '',
+      "sideboard":''
     })
   }
 

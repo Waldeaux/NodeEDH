@@ -22,6 +22,26 @@ export class DeckEditorFormComponent implements OnInit {
   parseFormInput(){
     let cards = [];
     let formValues = this.deckEditor.get('cards').value.split('\n');
+    let resultObject = this.formResultObject(formValues);
+    Object.keys(resultObject).forEach(x =>{
+      cards.push({cardText:x, count:resultObject[x], board:'main'});
+    })
+    let sideboard = [];
+    let sideboardResult = this.formResultObject(this.deckEditor.get('sideboard').value.split('\n'));
+    console.log(sideboardResult);
+    Object.keys(sideboardResult).forEach(x =>{
+      console.log(x);
+
+      sideboard.push({cardText:x, count:sideboardResult[x], board:'side'});
+    })
+    let result = {cards,
+      sideboard,
+    name:this.deckEditor.get('name').value,
+    draft:this.deckEditor.get('draft').value};
+    return result;
+  }
+
+  formResultObject(formValues:string[]){
     let resultObject = {};
     formValues.forEach(x =>{
       x = x.replace(/[’',\-]*/g, '');
@@ -44,12 +64,6 @@ export class DeckEditorFormComponent implements OnInit {
       }
       resultObject[cardText] += cardCount;
     })
-    Object.keys(resultObject).forEach(x =>{
-      cards.push({cardText:x, count:resultObject[x]});
-    })
-    let result = {cards,
-    name:this.deckEditor.get('name').value,
-  draft:this.deckEditor.get('draft').value};
-    return result;
+    return resultObject;
   }
 }
