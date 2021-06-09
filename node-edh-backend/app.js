@@ -48,7 +48,7 @@ async function main(){
         errorArray = [];
         let deckId = -1;
         let cardsList = [];
-        cards.forEach(x =>{
+        cards.concat(req.body.sideboard).forEach(x =>{
             promiseArray.push(getCard(x));
         })
         await Promise.all(promiseArray).then(resolve =>{
