@@ -185,6 +185,11 @@ async function main(){
         })
     })
 
+    app.get('/inventory/comparison/:id', async function(req, res){
+        await getNeededCardsForDeck(req.params.id).then(result =>{
+            res.end(JSON.stringify(result));
+        })
+    })
     app.post('/cards', async function(req, res){
         let promiseArray = [];
         req.body.forEach(card =>{
@@ -478,6 +483,22 @@ function getNeededCards(){
     })
 }
 
+function getNeededCardsForDeck(deckId){
+    console.log(deckId);
+    let query = "select c.name, SUM(dc.count) as dcCount, if(ic.iCount is null, 0, ic.iCount) as iCount from deck_cards dc left join cards c on c.id = dc.card_id";
+    query += " left join (select SUM(count) as iCount, c.name from inventory i left join cards c on c.id = i.idcards group by c.name) ic on c.name = ic.name";
+    query += " left join decks d on dc.deck_id = d.iddecks"
+    query += " where d.iddecks = " + deckId;
+    query += " group by c.name";
+    query += " having dcCount > iCount";
+    query += " order by c.name";
+    console.log(query);
+    return new Promise(resolve =>{
+        con.query(query, function(err, result){
+            resolve(result);
+        })
+    })
+}
 function insertCard(card){
     let query = "INSERT INTO `NodeEDH`.`cards` (`artist`, `asciiName`, `availability`, `borderColor`, `cardKingdomFoilId`,"
     query += "`cardKingdomId`, `colorIdentity`, `colorIndicator`, `colors`, `convertedManaCost`, `duelDeck`, `edhrecRank`, `faceConvertedManaCost`, `faceName`, "

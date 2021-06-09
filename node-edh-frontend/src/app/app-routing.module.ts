@@ -9,6 +9,8 @@ import { DecksComponent } from './decks/decks.component';
 import { InventoryEditorComponent } from './inventory-editor/inventory-editor.component';
 import { InventoryEditorRoutingService } from './inventory-editor/services/inventory-editor-routing.service';
 import { InventoryEditorService } from './inventory-editor/services/inventory-editor.service';
+import { NeededCardsForDeckComponent } from './needed-cards-for-deck/needed-cards-for-deck.component';
+import { NeededCardsForDeckRoutingService } from './needed-cards-for-deck/services/needed-cards-for-deck-routing.service';
 import { NeededCardsComponent } from './needed-cards/needed-cards.component';
 
 const routes: Routes = [
@@ -45,6 +47,13 @@ const routes: Routes = [
   {
     component:NeededCardsComponent,
     path:'needed-cards'
+  },
+  {
+    component:NeededCardsForDeckComponent,
+    path:'needed-cards/:id',
+    resolve:{
+      deck:NeededCardsForDeckRoutingService
+    }
   }
 ];
 

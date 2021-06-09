@@ -14,6 +14,7 @@ import { DeckCreatorComponent } from './deck-creator/deck-creator.component';
 import { InventoryEditorComponent } from './inventory-editor/inventory-editor.component';
 import { NeededCardsComponent } from './needed-cards/needed-cards.component';
 import { CardDetailsComponent } from './card-details/card-details.component';
+import { NeededCardsForDeckComponent } from './needed-cards-for-deck/needed-cards-for-deck.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import { CardDetailsComponent } from './card-details/card-details.component';
     DeckCreatorComponent,
     InventoryEditorComponent,
     NeededCardsComponent,
-    CardDetailsComponent
+    CardDetailsComponent,
+    NeededCardsForDeckComponent
   ],
   imports: [
     BrowserModule,
