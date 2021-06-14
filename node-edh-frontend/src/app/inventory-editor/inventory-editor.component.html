@@ -1,4 +1,9 @@
+<ng-container *ngIf="!(loading$ | async)">
 <form [formGroup]="form">
 <textarea cols="30" rows="20" formControlName="inventory"></textarea>
 </form>
 <button (click)="submitForm()">Submit</button>
+</ng-container>
+<ng-container *ngIf="(loading$ | async)">
+Loading...
+</ng-container>
