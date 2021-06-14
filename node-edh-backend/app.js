@@ -26,7 +26,7 @@ async function main(){
     await promise;
 
     app.get('/decks',function(req, res){
-        let query = "select * from decks";
+        let query = "select * from decks order by name";
         con.query(query, function(err, result){
             if(err) {
                 res.end(JSON.stringify([]));
@@ -472,7 +472,7 @@ function getInventory(){
 function getNeededCards(){
     let query = "select c.name, SUM(dc.count) as dcCount, if(ic.iCount is null, 0, ic.iCount) as iCount from deck_cards dc left join cards c on c.id = dc.card_id";
     query += " left join (select SUM(count) as iCount, c.name from inventory i left join cards c on c.id = i.idcards group by c.name) ic on c.name = ic.name";
-    query += " left join decks d on dc.deck_id = d.iddecks where d.draft = false"
+    query += " left join decks d on dc.deck_id = d.iddecks where d.draft = false and dc.board != 'side'"
     query += " group by c.name";
     query += " having dcCount > iCount";
     query += " order by c.name";
