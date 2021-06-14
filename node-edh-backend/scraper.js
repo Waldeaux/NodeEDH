@@ -151,7 +151,7 @@ async function insertScraping(){
     await page.click('#wizardCookieBannerOptOut');
     const newPage = await newPagePromise;
     await newPage.close();
-    await page.type('#autoCompleteSourceBoxsetAddText0_InnerTextBox', 'Kaldheim');
+    await page.type('#autoCompleteSourceBoxsetAddText0_InnerTextBox', 'Kaldheim Commander');
     await page.click('#ctl00_ctl00_MainContent_Content_setAdd');
     await Promise.all([
         page.waitForNavigation(),
@@ -186,7 +186,7 @@ async function insertScraping(){
                 x++;
                 continue;
             }
-            let layoutTest = await page.$(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_ArtistCredit`);
+            /*let layoutTest = await page.$(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_ArtistCredit`);
             if(!layoutTest){
                 let firstVariationLinkIds = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 a.variationLink`, nodes => nodes.map(n => n.id));
                 let secondVariationLinkIds = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent1 a.variationLink`, nodes => nodes.map(n => n.id));
@@ -203,7 +203,7 @@ async function insertScraping(){
                 page.goBack()
             ]);
                 x++;
-                continue;
+                continue;*/
             //name = name.replace(/`/g, `\\\``);
             let artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_artistRow .value a`);
             let cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_cmcRow .value`);
@@ -272,7 +272,7 @@ async function insertScraping(){
             let subtypeString = subtypes.join(',');
             let flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_FlavorText .value`);
             let rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_rarityRow .value span`);
-            let setCode = 'STA';
+            let setCode = 'KHC';
             let standardized_name = name.replace(/[',\-]*/g, '');
         
             let colors = [];
