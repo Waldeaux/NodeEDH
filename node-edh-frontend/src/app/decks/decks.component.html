@@ -1,5 +1,10 @@
+
 <ng-container *ngFor="let deck of (decks$ | async)">
-    <div (click)="deckDetails(deck.iddecks)">{{deck.name}}</div>
+    <div *ngIf="!deck.draft" (click)="deckDetails(deck.iddecks)">{{deck.name}}</div>
+</ng-container>
+<h3>Drafts</h3>
+<ng-container *ngFor="let deck of (decks$ | async)">
+    <div *ngIf="deck.draft" (click)="deckDetails(deck.iddecks)">{{deck.name}}</div>
 </ng-container>
 
 <button (click)="createNewDeck()">Create New Deck</button>
