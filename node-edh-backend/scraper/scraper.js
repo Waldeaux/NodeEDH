@@ -39,8 +39,10 @@ async function queryDb(){
             };
             resolve();
         })
+    }).then(() => {
+        console.log("success!");
+        con.close();
     })
-    console.log("success!");
 }
 
 async function goBack(){
