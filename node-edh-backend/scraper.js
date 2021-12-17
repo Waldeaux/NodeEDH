@@ -47,7 +47,6 @@ async function goBack(){
     ]);
 }
 async function insertScraping(){
-    
     const browser = await puppeteer.launch({
         headless: false,
     });
@@ -81,7 +80,6 @@ async function insertScraping(){
             const regex = /\bmultiverseid=\b[0-9]+[?]?/;
             const result = url.match(regex)[0];
             const multiverseId = Number.parseInt(result.split('=')[1]);
-            let layoutAppend = '';
             let name = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_subtitleDisplay`);
             let faceName = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=nameRow] .value`);
             if(name != faceName){
@@ -105,26 +103,26 @@ async function insertScraping(){
                 continue;
             }
             
-            let artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_artistRow .value a`);
-            let cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_cmcRow .value`);
-            let number = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_numberRow .value`);
-            let type = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_typeRow .value`)
-            let imageChildren = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_textRow img`, nodes => nodes.map(n => n.alt));
+            let artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_artistRow .value a`);
+            let cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cmcRow .value`);
+            let number = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_numberRow .value`);
+            let type = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_typeRow .value`)
+            let imageChildren = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_textRow img`, nodes => nodes.map(n => n.alt));
             imageChildren = imageChildren.map(x => symbolSwitch(x));
-            let text = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_textRow .cardtextbox`, nodes => nodes.map(n => n.innerHTML));
+            let text = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_textRow .cardtextbox`, nodes => nodes.map(n => n.innerHTML));
             let textString= text.join('\n');
             for(let x = 0; x < imageChildren.length; x++){
                 textString = textString.replace(/<img[ A-Za-z0-9?;&="\/.]+>/, `{${imageChildren[x]}}`);
             }
-            let manaCost = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_manaRow .value img`, nodes => nodes.map(n => n.alt));
+            let manaCost = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_manaRow .value img`, nodes => nodes.map(n => n.alt));
             let manaCostText = manaCost.map(x =>symbolSwitch(x)
             ).join('}{');
             if(manaCostText.length >0){
                 manaCostText = `{${manaCostText}}`
             }
-            let ptType = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_ptRow .label`);
+            let ptType = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_ptRow .label`);
         
-            let ptText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_ptRow .value`);
+            let ptText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_ptRow .value`);
             let power = 0;
             let toughness = 0;
             let loyalty = 0;
@@ -170,8 +168,8 @@ async function insertScraping(){
             let typeString = types.join(',');
             let supertypeString = supertypes.join(',');
             let subtypeString = subtypes.join(',');
-            let flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_FlavorText .value`);
-            let rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_rarityRow .value span`);
+            let flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_FlavorText .value`);
+            let rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_rarityRow .value span`);
             let setCode = globalSetCode;
             let standardized_name = name.replace(/[',\-]*/g, '');
         
