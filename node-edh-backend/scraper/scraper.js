@@ -1,3 +1,4 @@
+const cardInsert = require('./card-insert.js').CardInsert
 const { mainModule } = require('process');
 var mysql = require('mysql');
 const puppeteer = require('puppeteer');
@@ -5,12 +6,13 @@ var page;
 var con;
 var query = "";
 var queryValues = [];
-var globalSetCode = "MID"
-var setName = 'Innistrad: Midnight Hunt';
+var globalSetCode = "MIC"
+var setName = 'Innistrad: Midnight Hunt Commander';
 var browser;
 var symbolSwitch = symbolSwitchFunction;
 main();
 async function main(){
+    composeQuery();
     await insertScraping();
     await queryDb();
 }
@@ -69,8 +71,8 @@ async function insertScraping(){
         page.click('#ctl00_ctl00_MainContent_Content_filterSubmit'),
     ]);
     let x = 1;
-    
-    while(true){
+    let parsing = true;
+    while(parsing){
         x = 1;
         while(true){
             try{
@@ -85,11 +87,12 @@ async function insertScraping(){
             const url = page.url();
             const regex = /\bmultiverseid=\b[0-9]+[?]?/;
             const result = url.match(regex)[0];
-            const multiverseId = Number.parseInt(result.split('=')[1]);
+            let cardObject = new cardInsert();
+            cardObject.multiverseId = result.split('=')[1];
             let name = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_subtitleDisplay`);
             let faceName = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=nameRow] .value`);
             if(name != faceName){
-            await goBack();
+                await goBack();
                 x++;
                 continue;
             }
@@ -103,15 +106,17 @@ async function insertScraping(){
                 if(isFront)
                 {
                     await dynamicInsertModalCard();
+                    parsing = false;
+                    break;
                 }
                 await goBack();
                 x++;
                 continue;
             }
             
-            let artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_artistRow .value a`);
-            let cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cmcRow .value`);
-            let number = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_numberRow .value`);
+            cardObject.artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_artistRow .value a`);
+            cardObject.cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cmcRow .value`);
+            cardObject.number = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_numberRow .value`);
             let type = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_typeRow .value`)
             let imageChildren = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_textRow img`, nodes => nodes.map(n => n.alt));
             imageChildren = imageChildren.map(x => symbolSwitch(x));
@@ -171,13 +176,13 @@ async function insertScraping(){
                     types.push(element);
                 }
             });
-            let typeString = types.join(',');
-            let supertypeString = supertypes.join(',');
-            let subtypeString = subtypes.join(',');
-            let flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_FlavorText .value`);
-            let rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_rarityRow .value span`);
-            let setCode = globalSetCode;
-            let standardized_name = name.replace(/[',\-]*/g, '');
+            cardObject.typeString = types.join(',');
+            cardObject.supertypeString = supertypes.join(',');
+            cardObject.subtypeString = subtypes.join(',');
+            cardObject.flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_FlavorText .value`);
+            cardObject.rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_rarityRow .value span`);
+            cardObject.setCode = globalSetCode;
+            cardObject.standardized_name = name.replace(/[',\-]*/g, '');
         
             let colors = [];
             let colorIdentity = [];
@@ -191,37 +196,23 @@ async function insertScraping(){
                     colorIdentity.push(x);
                 }
             })
-            let colorString = colors.join(',');
-            let colorIdentityString = colorIdentity.join(',');
+            cardObject.colorString = colors.join(',');
+            cardObject.colorIdentityString = colorIdentity.join(',');
         
-            //textString = textString.replace(/'/g, `\\\'`);
-            composeQuery();
-            queryValues.push([artist,
-            colorIdentityString,
-            colorString,
-            cmc,
-            flavorText,
-            loyalty,
-            manaCostText,
-            multiverseId,
-            name,
-            name,
-            number,
-            number+"-" +setCode,
-            power,
-            rarity,
-            setCode,
-            subtypeString,
-            supertypeString,
-            textString,
-            toughness,
-            type,
-            typeString,
-            standardized_name,
-        'normal']);
-        await goBack();
-            x++;
+            textString = textString.replace(/'/g, `\\\'`);
+            cardObject.loyalty = loyalty;
+            cardObject.manaCostText = manaCostText;
+            cardObject.faceName = name;
+            cardObject.name = name;
+            cardObject.power = power;
+            cardObject.textString = textString;
+            cardObject.toughness = toughness;
+            cardObject.type = type;
+            cardObject.layout = 'normal';
             
+            insertQueryValues(cardObject);
+            await goBack();
+            x++;
         }
         let element = await page.$('#ctl00_ctl00_ctl00_MainContent_SubContent_topPagingControlsContainer a:last-child')
         if(!element){
@@ -241,12 +232,14 @@ async function dynamicInsertModalCard(){
     const url = page.url();
     const regex = /\bmultiverseid=\b[0-9]+[?]?/;
     const result = url.match(regex)[0];
-    const multiverseId = Number.parseInt(result.split('=')[1]);
+    let cardObject = new cardInsert();
+    cardObject.multiverseId = result.split('=')[1];
     let faceName = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=nameRow] .value`);
     let backName = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent1 [id*=nameRow] .value`);
-    let artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=ArtistCredit] a`);
-    let cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=cmcRow] .value`);
-    let number = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=numberRow] .value`);
+    
+    cardObject.artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=ArtistCredit] a`);
+    cardObject.cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=cmcRow] .value`);
+    cardObject.number = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=numberRow] .value`);
     let type = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=typeRow] .value`)
     let imageChildren = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=textRow] img`, nodes => nodes.map(n => n.alt));
     imageChildren = imageChildren.map(x => symbolSwitch(x));
@@ -288,6 +281,9 @@ async function dynamicInsertModalCard(){
             toughness = pt[1].trim();
         }
     }
+    cardObject.power = power;
+    cardObject.toughness = toughness;
+    cardObject.loyalty = loyalty;
     let typeArray = type.split(/[ ]+/);
     let typeindex = typeArray.indexOf('—');
     let subtypesFound = true;
@@ -317,18 +313,13 @@ async function dynamicInsertModalCard(){
             types.push(element);
         }
     });
-    let typeString = types.join(',');
-    let supertypeString = supertypes.join(',');
-    let subtypeString = subtypes.join(',');
-    let flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=FlavorText] .value`);
-    let rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=rarityRow] span`);
-    switch(rarity){
-        case('Mythic Rare'):
-        rarity = 'mythic';
-        break;
-    }
-    let setCode = globalSetCode;
-    let standardized_name = faceName.replace(/[',\-]*/g, '');
+    cardObject.typeString = types.join(',');
+    cardObject.supertypeString = supertypes.join(',');
+    cardObject.subtypeString = subtypes.join(',');
+    cardObject.flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=FlavorText] .value`);
+    cardObject.rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=rarityRow] span`);
+    cardObject.setCode = globalSetCode;
+    cardObject.standardized_name = faceName.replace(/[',\-]*/g, '');
 
     let colors = [];
     let colorIdentity = [];
@@ -348,36 +339,18 @@ async function dynamicInsertModalCard(){
             colorIdentity.push(x);
         }
     })
-    let colorString = colors.join(',');
-    let colorIdentityString = colorIdentity.join(',');
+    cardObject.colorString = colors.join(',');
+    cardObject.colorIdentityString = colorIdentity.join(',');
 
-    let combinedName = faceName + ' // ' + backName;
+    cardObject.name = faceName + ' // ' + backName;
 
-    //textString = textString.replace(/'/g, `\\\'`);
-    composeQuery();
-    queryValues.push([artist,
-    colorIdentityString,
-    colorString,
-    cmc,
-    flavorText,
-    loyalty,
-    manaCostText,
-    multiverseId,
-    faceName,
-    combinedName,
-    number,
-    number+"-" +setCode,
-    power,
-    rarity,
-    setCode,
-    subtypeString,
-    supertypeString,
-    textString,
-    toughness,
-    type,
-    typeString,
-    standardized_name,
-    "transform"]);
+    textString = textString.replace(/'/g, `\\\'`);
+    cardObject.manaCostText = manaCostText;
+    cardObject.faceName = faceName;
+    cardObject.textString = textString;
+    cardObject.type = type;
+    cardObject.layout = "transform";
+    insertQueryValues(cardObject);
     return Promise.resolve();
 }
 
@@ -447,4 +420,11 @@ function composeQuery(){
     + "standardized_name,"
     + "layout)"
     + "VALUES ?";
+}
+
+function insertQueryValues(cardObject){
+    if(!(cardObject instanceof cardInsert)){
+        return;
+    }
+    queryValues.push(cardObject.getQueryValues());
 }
