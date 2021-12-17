@@ -6,13 +6,13 @@ var con;
 var query = "";
 var queryValues = [];
 var frontFaces = [];
+var globalSetCode = "MID"
+var setName = 'Innistrad: Midnight Hunt';
 var symbolSwitch = symbolSwitchFunction;
 main();
 async function main(){
     //await testInsertScrape();
     await insertScraping();
-    //await getCardsById();
-    console.log(query);
     await queryDb();
 }
 async function queryDb(){
@@ -45,20 +45,7 @@ async function queryDb(){
 async function getCardsById(){
     const cards = [
         {
-            id:503657,
-            firstAppend:'_ctl03',
-            secondAppend:'_ctl04'
-        },
-        
-        {
-            id:503646,
-            firstAppend:'_ctl03',
-            secondAppend:'_ctl04'
-        },
-        
-        
-        {
-            id:503766,
+            id:522288,
             firstAppend:'_ctl03',
             secondAppend:'_ctl04'
         }
@@ -67,6 +54,7 @@ async function getCardsById(){
         headless: false,
     });
     page = (await browser.pages())[0];
+    await page.setDefaultNavigationTimeout(0); 
     await page.goto('https://gatherer.wizards.com/Pages/Advanced.aspx');
     const newPagePromise = new Promise(x => browser.once('targetcreated', target => x(target.page())));    // declare promise
     await page.click('#wizardCookieBannerOptOut');
@@ -121,10 +109,7 @@ async function multiverseIdScraping(){
             name = name.trim();
             name = name.replace(/'/g, '\\\'');
             query += ("UPDATE `NodeEDH`.`cards` SET `multiverseId` = "+ multiverseId + " WHERE `name` = '" + name + "' and `setCode` = 'CMR';");
-            await Promise.all([
-                page.waitForNavigation(),
-                page.goBack()
-            ]);
+            await goBack();
             x++;
         }
         let element = await page.$('#ctl00_ctl00_ctl00_MainContent_SubContent_topPagingControlsContainer a:last-child')
@@ -140,6 +125,12 @@ async function multiverseIdScraping(){
     }
 }
 
+async function goBack(){
+    await Promise.all([
+        page.waitForNavigation(),
+        page.goBack()
+    ]);
+}
 async function insertScraping(){
     
     const browser = await puppeteer.launch({
@@ -151,7 +142,7 @@ async function insertScraping(){
     await page.click('#wizardCookieBannerOptOut');
     const newPage = await newPagePromise;
     await newPage.close();
-    await page.type('#autoCompleteSourceBoxsetAddText0_InnerTextBox', 'Kaldheim Commander');
+    await page.type('#autoCompleteSourceBoxsetAddText0_InnerTextBox', setName);
     await page.click('#ctl00_ctl00_MainContent_Content_setAdd');
     await Promise.all([
         page.waitForNavigation(),
@@ -179,14 +170,11 @@ async function insertScraping(){
             let name = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_subtitleDisplay`);
             let faceName = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=nameRow] .value`);
             if(name != faceName){
-            await Promise.all([
-                page.waitForNavigation(),
-                page.goBack()
-            ]);
+            await goBack();
                 x++;
                 continue;
             }
-            /*let layoutTest = await page.$(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_ArtistCredit`);
+            let layoutTest = await page.$(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_ArtistCredit`);
             if(!layoutTest){
                 let firstVariationLinkIds = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 a.variationLink`, nodes => nodes.map(n => n.id));
                 let secondVariationLinkIds = await page.$$eval(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent1 a.variationLink`, nodes => nodes.map(n => n.id));
@@ -197,13 +185,10 @@ async function insertScraping(){
                 {
                     await dynamicInsertModalCard();
                 }
-            }
-            await Promise.all([
-                page.waitForNavigation(),
-                page.goBack()
-            ]);
+                    await goBack();
                 x++;
-                continue;*/
+                continue;
+            }
             //name = name.replace(/`/g, `\\\``);
             let artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_artistRow .value a`);
             let cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_cmcRow .value`);
@@ -272,7 +257,7 @@ async function insertScraping(){
             let subtypeString = subtypes.join(',');
             let flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_FlavorText .value`);
             let rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_rarityRow .value span`);
-            let setCode = 'KHC';
+            let setCode = globalSetCode;
             let standardized_name = name.replace(/[',\-]*/g, '');
         
             let colors = [];
@@ -300,6 +285,7 @@ async function insertScraping(){
             + "loyalty,"
             + "manaCost,"
             + "multiverseId,"
+            + "facename,"
             + "name,"
             + "number,"
             + "uuid,"
@@ -312,7 +298,8 @@ async function insertScraping(){
             + "toughness,"
             + "type,"
             + "types,"
-            + "standardized_name)"
+            + "standardized_name,"
+            + "layout)"
             + "VALUES ?";
             queryValues.push([artist,
             colorIdentityString,
@@ -322,6 +309,7 @@ async function insertScraping(){
             loyalty,
             manaCostText,
             multiverseId,
+            name,
             name,
             number,
             number+"-" +setCode,
@@ -334,13 +322,10 @@ async function insertScraping(){
             toughness,
             type,
             typeString,
-            standardized_name]);
-            await Promise.all([
-                page.waitForNavigation(),
-                page.goBack()
-            ]);
+            standardized_name,
+        'normal']);
+        await goBack();
             x++;
-            
             
         }
         let element = await page.$('#ctl00_ctl00_ctl00_MainContent_SubContent_topPagingControlsContainer a:last-child')
@@ -448,7 +433,7 @@ async function insertModalCard(firstAppend, secondAppend){
     let flavorText = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_FlavorText .value`);
     let rarity = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${firstAppend}_rarityRow .value span`);
     
-    let setCode = 'KHM';
+    let setCode = globalSetCode;
     let standardized_name = faceName.replace(/[',\-]*/g, '');
 
     let colors = [];
@@ -529,7 +514,6 @@ async function dynamicInsertModalCard(){
     const regex = /\bmultiverseid=\b[0-9]+[?]?/;
     const result = url.match(regex)[0];
     const multiverseId = Number.parseInt(result.split('=')[1]);
-    let layoutAppend = '';
     let faceName = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=nameRow] .value`);
     let backName = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent1 [id*=nameRow] .value`);
     let artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=ArtistCredit] a`);
@@ -615,8 +599,7 @@ async function dynamicInsertModalCard(){
         rarity = 'mythic';
         break;
     }
-    console.log(rarity);
-    let setCode = 'KHM';
+    let setCode = globalSetCode;
     let standardized_name = faceName.replace(/[',\-]*/g, '');
 
     let colors = [];
@@ -690,7 +673,7 @@ async function dynamicInsertModalCard(){
     type,
     typeString,
     standardized_name,
-    "modal_dfc"]);
+    "transform"]);
     return Promise.resolve();
 }
 
