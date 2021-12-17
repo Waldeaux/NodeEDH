@@ -195,31 +195,7 @@ async function insertScraping(){
             let colorIdentityString = colorIdentity.join(',');
         
             //textString = textString.replace(/'/g, `\\\'`);
-            query = " INSERT INTO cards"
-            + "(artist,"
-            + "colorIdentity,"
-            + "colors,"
-            + "convertedManaCost,"
-            + "flavorText,"
-            + "loyalty,"
-            + "manaCost,"
-            + "multiverseId,"
-            + "facename,"
-            + "name,"
-            + "number,"
-            + "uuid,"
-            + "power,"
-            + "rarity,"
-            + "setCode,"
-            + "subtypes,"
-            + "supertypes,"
-            + "text,"
-            + "toughness,"
-            + "type,"
-            + "types,"
-            + "standardized_name,"
-            + "layout)"
-            + "VALUES ?";
+            composeQuery();
             queryValues.push([artist,
             colorIdentityString,
             colorString,
