@@ -5,13 +5,11 @@ var page;
 var con;
 var query = "";
 var queryValues = [];
-var frontFaces = [];
 var globalSetCode = "MID"
 var setName = 'Innistrad: Midnight Hunt';
 var symbolSwitch = symbolSwitchFunction;
 main();
 async function main(){
-    //await testInsertScrape();
     await insertScraping();
     await queryDb();
 }
@@ -40,89 +38,6 @@ async function queryDb(){
         })
     })
     console.log("success!");
-}
-
-async function getCardsById(){
-    const cards = [
-        {
-            id:522288,
-            firstAppend:'_ctl03',
-            secondAppend:'_ctl04'
-        }
-        ];
-    const browser = await puppeteer.launch({
-        headless: false,
-    });
-    page = (await browser.pages())[0];
-    await page.setDefaultNavigationTimeout(0); 
-    await page.goto('https://gatherer.wizards.com/Pages/Advanced.aspx');
-    const newPagePromise = new Promise(x => browser.once('targetcreated', target => x(target.page())));    // declare promise
-    await page.click('#wizardCookieBannerOptOut');
-    const newPage = await newPagePromise;
-    await newPage.close();
-    //cards.forEach(async function (element) {
-        for(const id of cards){
-        await Promise.all([
-            page.waitForNavigation(),
-            page.goto('https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid='+id.id),
-        ]);
-        await insertModalCard(id.firstAppend, id.secondAppend);
-    }
-    //})
-}
-async function multiverseIdScraping(){
-    
-    const browser = await puppeteer.launch({
-        headless: false,
-    });
-    const page = (await browser.pages())[0];
-    await page.goto('https://gatherer.wizards.com/Pages/Advanced.aspx');
-    const newPagePromise = new Promise(x => browser.once('targetcreated', target => x(target.page())));    // declare promise
-    await page.click('#wizardCookieBannerOptOut');
-    const newPage = await newPagePromise;
-    await newPage.close();
-    await page.type('#autoCompleteSourceBoxsetAddText0_InnerTextBox', 'Commander Legends');
-    await page.click('#ctl00_ctl00_MainContent_Content_setAdd');
-    await Promise.all([
-        page.waitForNavigation(),
-        page.click('#ctl00_ctl00_MainContent_Content_filterSubmit'),
-    ]);
-    let x = 1;
-    while(true){
-          x = 1;
-        while(true){
-            try{
-                await Promise.all([
-                    page.waitForNavigation(),
-                    page.click('.cardItemTable table:nth-child(' + x +') .cardTitle a')
-                ]);
-            }
-            catch{
-                break;
-            }
-            const url = page.url();
-            const regex = /\bmultiverseid=\b[0-9]+[?]?/;
-            const result = url.match(regex)[0];
-            const multiverseId = Number.parseInt(result.split('=')[1]);
-            let element = await page.$('#ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_subtitleDisplay')
-            let name = await page.evaluate(el => el.textContent, element);
-            name = name.trim();
-            name = name.replace(/'/g, '\\\'');
-            query += ("UPDATE `NodeEDH`.`cards` SET `multiverseId` = "+ multiverseId + " WHERE `name` = '" + name + "' and `setCode` = 'CMR';");
-            await goBack();
-            x++;
-        }
-        let element = await page.$('#ctl00_ctl00_ctl00_MainContent_SubContent_topPagingControlsContainer a:last-child')
-        if(!element){
-            break;
-        }
-        else{
-            await Promise.all([
-                page.waitForNavigation(),
-                page.click('#ctl00_ctl00_ctl00_MainContent_SubContent_topPagingControlsContainer a:last-child')
-            ]);
-        }
-    }
 }
 
 async function goBack(){
@@ -189,7 +104,7 @@ async function insertScraping(){
                 x++;
                 continue;
             }
-            //name = name.replace(/`/g, `\\\``);
+            
             let artist = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_artistRow .value a`);
             let cmc = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_cmcRow .value`);
             let number = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent${layoutAppend}_numberRow .value`);
@@ -626,31 +541,7 @@ async function dynamicInsertModalCard(){
     let combinedName = faceName + ' // ' + backName;
 
     //textString = textString.replace(/'/g, `\\\'`);
-    query = " INSERT INTO cards"
-    + "(artist,"
-    + "colorIdentity,"
-    + "colors,"
-    + "convertedManaCost,"
-    + "flavorText,"
-    + "loyalty,"
-    + "manaCost,"
-    + "multiverseId,"
-    + "faceName,"
-    + "name,"
-    + "number,"
-    + "uuid,"
-    + "power,"
-    + "rarity,"
-    + "setCode,"
-    + "subtypes,"
-    + "supertypes,"
-    + "text,"
-    + "toughness,"
-    + "type,"
-    + "types,"
-    + "standardized_name,"
-    + "layout)"
-    + "VALUES ?";
+    composeQuery();
     queryValues.push([artist,
     colorIdentityString,
     colorString,
@@ -715,4 +606,32 @@ function symbolSwitchFunction(x){
             default:
                 return x;
         }
+}
+
+function composeQuery(){
+    query = " INSERT INTO cards"
+    + "(artist,"
+    + "colorIdentity,"
+    + "colors,"
+    + "convertedManaCost,"
+    + "flavorText,"
+    + "loyalty,"
+    + "manaCost,"
+    + "multiverseId,"
+    + "faceName,"
+    + "name,"
+    + "number,"
+    + "uuid,"
+    + "power,"
+    + "rarity,"
+    + "setCode,"
+    + "subtypes,"
+    + "supertypes,"
+    + "text,"
+    + "toughness,"
+    + "type,"
+    + "types,"
+    + "standardized_name,"
+    + "layout)"
+    + "VALUES ?";
 }
