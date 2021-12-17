@@ -73,8 +73,7 @@ async function insertScraping(){
         page.click('#ctl00_ctl00_MainContent_Content_filterSubmit'),
     ]);
     let x = 1;
-    let parsing = true;
-    while(parsing){
+    while(true){
         x = 1;
         while(true){
             try{
@@ -108,7 +107,6 @@ async function insertScraping(){
                 if(isFront)
                 {
                     await dynamicInsertModalCard();
-                    parsing = false;
                     break;
                 }
                 await goBack();
