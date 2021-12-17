@@ -7,6 +7,7 @@ var query = "";
 var queryValues = [];
 var globalSetCode = "MID"
 var setName = 'Innistrad: Midnight Hunt';
+var browser;
 var symbolSwitch = symbolSwitchFunction;
 main();
 async function main(){
@@ -46,16 +47,21 @@ async function goBack(){
         page.goBack()
     ]);
 }
+
+async function clearCookieNotification(){
+    const newPagePromise = new Promise(x => browser.once('targetcreated', target => x(target.page())));    // declare promise
+    await page.click('#wizardCookieBannerOptOut');
+    //const newPage = await newPagePromise;
+    //await newPage.close();
+}
+
 async function insertScraping(){
-    const browser = await puppeteer.launch({
+    browser = await puppeteer.launch({
         headless: false,
     });
     page = (await browser.pages())[0];
     await page.goto('https://gatherer.wizards.com/Pages/Advanced.aspx');
-    const newPagePromise = new Promise(x => browser.once('targetcreated', target => x(target.page())));    // declare promise
-    await page.click('#wizardCookieBannerOptOut');
-    const newPage = await newPagePromise;
-    await newPage.close();
+    //await clearCookieNotification();
     await page.type('#autoCompleteSourceBoxsetAddText0_InnerTextBox', setName);
     await page.click('#ctl00_ctl00_MainContent_Content_setAdd');
     await Promise.all([
@@ -98,7 +104,7 @@ async function insertScraping(){
                 {
                     await dynamicInsertModalCard();
                 }
-                    await goBack();
+                await goBack();
                 x++;
                 continue;
             }
