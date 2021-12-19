@@ -7,9 +7,23 @@ app.use(cors());
 var https = require('https');
 const { resolve } = require('path');
 const { rejects } = require('assert');
+const endpoints = require('./controllers.module');
 var con;
 var errorArray = [];
 main();
+function initializeEndpoints(endpoints){
+    Object.values(endpoints).forEach(_ =>{
+        console.log(typeof(_))
+        switch(typeof(_)){
+            case('object'):
+                initializeEndpoints(_);
+                break;
+            case('function'):
+                _(app, con);
+                break;
+        }
+    });
+}
 async function main(){
     con = mysql.createConnection({
         host:'nodeedh.cwlxyhjp27tf.us-east-1.rds.amazonaws.com',
@@ -24,18 +38,7 @@ async function main(){
         resolve();
     });})
     await promise;
-
-    app.get('/decks',function(req, res){
-        let query = "select * from decks order by name";
-        con.query(query, function(err, result){
-            if(err) {
-                res.end(JSON.stringify([]));
-                return;
-            };
-            res.end(JSON.stringify(result));
-        })
-    });
-
+    initializeEndpoints(endpoints);
     app.get('/decks/:id', async function(req, res){
         getCards(req.params.id, res);
 
@@ -201,21 +204,6 @@ async function main(){
         });
     })
 
-    app.get('/cards/:id', async function(req, res){
-        let cardId = req.params.id;
-        let inventoryCount = await getInventoryCount(cardId);
-        console.log(inventoryCount);
-        let decks = await getDecksByCard(cardId);
-        console.log(decks);
-        let result = {
-            name:decks.name,
-            total:inventoryCount,
-            locations:decks.locations,
-            unused:inventoryCount - decks.locations.map(x => x.count).reduce((accumulator, currentValue) => accumulator + currentValue)
-        }
-        console.log(result);
-        res.end(JSON.stringify(result));
-    })
     app.delete('/decks/:id', async function(req, res){
         let deckId = req.params.id;
         await deleteDeck(deckId);
@@ -404,21 +392,6 @@ function deleteInventoryCard(cardId){
     })
 }
 
-function getDecksByCard(cardId){
-    let query = "select d.name as locations, dc.count, c.name as cardName from cards c "
-    query += "join cards name_cards on c.name = name_cards.name "
-    query += "join deck_cards dc on name_cards.id = dc.card_id "
-    query += "left join decks d on dc.deck_id = d.iddecks "
-    query += `where c.id = ${cardId};`
-    return new Promise(resolve =>{
-        con.query(query, function(err, result){
-            console.log(result);
-            resolve({
-                name:result[0].cardName,
-                locations:result.map(x => {return {location:x.locations,count:x.count}})});
-        })
-    })
-}
 function deleteDeckCard(deckId, cardId, board){
     let query = "Delete from `NodeEDH`.`deck_cards` WHERE deck_id = "+deckId+" and card_id = " + cardId +" and board = '" + board + "';"
     console.log(board);
@@ -429,18 +402,6 @@ function deleteDeckCard(deckId, cardId, board){
     })
 }
 
-function getInventoryCount(cardId){
-    let query = "select SUM(i.count) as count from cards c "
-    query += "join cards name_cards on c.name = name_cards.name "
-    query += "left join inventory i on name_cards.id = i.idcards "
-    query += `where c.id = ${cardId};`
-        return new Promise(resolve =>{
-            con.query(query, function(err, result){
-            resolve(result[0].count);
-        })
-    })
-    
-}
 function updateDeckName(deckId, name,draft){
     let query = "UPDATE `NodeEDH`.`decks` set `name` = \"" + name+ "\", `draft`=\"" + (draft ? 1:0) + "\" WHERE iddecks = "+deckId +";"
     console.log(query);
