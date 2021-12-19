@@ -6,8 +6,8 @@ var page;
 var con;
 var query = "";
 var queryValues = [];
-var globalSetCode = "MIC"
-var setName = 'Innistrad: Midnight Hunt Commander';
+var globalSetCode = "VOW"
+var setName = 'Innistrad: Crimson Vow';
 var browser;
 var symbolSwitch = symbolSwitchFunction;
 main();
