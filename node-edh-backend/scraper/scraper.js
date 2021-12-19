@@ -41,7 +41,6 @@ async function queryDb(){
         })
     }).then(() => {
         console.log("success!");
-        con.close();
     })
 }
 
