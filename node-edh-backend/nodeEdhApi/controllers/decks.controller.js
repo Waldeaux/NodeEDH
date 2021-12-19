@@ -1,7 +1,7 @@
-var con = require('./databaseConnection');
+var con = require('../databaseConnection');
 
 const { resolve } = require('path');
-var getCard = require('./helpers.func').getCard;
+var getCard = require('../helpers.func').getCard;
 const controllerEndpoints = [];
 controllerEndpoints.push(
     function(app){
