@@ -3,7 +3,7 @@ var app = express();
 var cors = require('cors');
 app.use(express.json({limit:'10mb'}));
 app.use(cors());
-const endpoints = require('./controllers.module');
+const endpoints = require('./controllers/controllers.module');
 main();
 function initializeEndpoints(endpoints){
     Object.values(endpoints).forEach(_ =>{

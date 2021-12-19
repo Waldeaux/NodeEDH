@@ -1,4 +1,4 @@
-var con = require('./databaseConnection');
+var con = require('../databaseConnection');
 
 const { resolve } = require('path');
 const controllerEndpoints = [];
