@@ -15,6 +15,8 @@ async function main(){
     composeQuery();
     await insertScraping();
     await queryDb();
+    browser.close();
+    return;
 }
 async function queryDb(){
     con = mysql.createConnection({
