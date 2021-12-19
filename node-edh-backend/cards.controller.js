@@ -24,7 +24,6 @@ controllerEndpoints.push(
                 promiseArray.push(insertCard(card));
             })
             Promise.all(promiseArray).then(x =>{
-                console.log(x);
                 res.end(JSON.stringify([]));
             });
         })

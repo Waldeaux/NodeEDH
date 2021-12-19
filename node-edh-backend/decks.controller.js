@@ -5,7 +5,6 @@ var getCard = require('./helpers.func').getCard;
 const controllerEndpoints = [];
 controllerEndpoints.push(
     function(app){
-        console.log(con)
     app.get('/decks',function(req, res){
         let query = "select * from decks order by name";
         con.query(query, function(err, result){
@@ -91,7 +90,6 @@ controllerEndpoints.push(
                 }
             )
             .catch(error =>{
-                console.log("failed");
                 res.status(400);
                 res.write(`Cards not found: ${error}`);
             });
@@ -110,7 +108,6 @@ controllerEndpoints.push(
             let deckId = req.params.id;
                 //For each unique card name submitted, get the appropriate id
                 cards.concat(req.body.sideboard).forEach(x =>{
-                    console.log(x);
                     promiseArray.push(getCard(x));
                 })
                 await Promise.all(promiseArray).then(result =>{
@@ -150,7 +147,6 @@ controllerEndpoints.push(
                         let countSame = false;
                         let index = -1;
                         resolve.forEach((currentCard, key) =>{
-                            console.log(submitCard.cardText);
                             if(submitCard.id === currentCard.card_id && submitCard.board === currentCard.board){
                                 cardExists = true;
                                 index = key;
@@ -176,7 +172,6 @@ controllerEndpoints.push(
                         //If it doesn't exist, add a record for it to that deck
                         else{
                             //Insert
-                            console.log(submitCard)
                             promiseArray.push(insertDeckCard(deckId, submitCard.id,submitCard.count,submitCard.board))
                         }
                     });
@@ -208,7 +203,6 @@ controllerEndpoints.push(
 module.exports = controllerEndpoints;
 function updateDeckName(deckId, name,draft){
     let query = "UPDATE `NodeEDH`.`decks` set `name` = \"" + name+ "\", `draft`=\"" + (draft ? 1:0) + "\" WHERE iddecks = "+deckId +";"
-    console.log(query);
     return new Promise(resolve =>{
         con.query(query, function(err, result){
             resolve();
@@ -225,7 +219,6 @@ function updateDeckName(deckId, name,draft){
 
 function deleteDeckCard(deckId, cardId, board){
     let query = "Delete from `NodeEDH`.`deck_cards` WHERE deck_id = "+deckId+" and card_id = " + cardId +" and board = '" + board + "';"
-    console.log(board);
     return new Promise(resolve =>{
         con.query(query, function(err, result){
             resolve();
@@ -250,11 +243,6 @@ function deleteDeck(deckId){
 }
 function insertDeckCard(deckId, cardId, count,board){
     let query = "INSERT INTO `NodeEDH`.`deck_cards` (`deck_id`,`card_id`,`count`, `board`) VALUES (" + deckId + ", "+ cardId +"," + count+ ",'" + board +"');"
-    console.log(board);
-    console.log(query);
-    if(board == 'side'){
-        console.log(query);
-    }
     return new Promise(resolve =>{
         con.query(query, function(err, result){
             resolve();

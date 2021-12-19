@@ -44,7 +44,6 @@ controllerEndpoints.push(
             try{
                 inventory.forEach(x =>{
                     currentCard = x;
-                    console.log(currentCard);
                     promiseArray.push(getCard(x));
                 })
                 await Promise.all(promiseArray).then(result =>{
@@ -82,7 +81,6 @@ controllerEndpoints.push(
                         let countSame = false;
                         let index = -1;
                         let deleteCard = false;
-                        console.log(submitCard);
                         resolve.forEach((currentCard, key) =>{
                             if(submitCard.id === currentCard.idcards && submitCard.board === currentCard.board){
                                 cardExists = true;
@@ -126,8 +124,6 @@ controllerEndpoints.push(
                 });
             }
             catch{
-                console.log("error")
-                console.log(currentCard);
             }
             res.end(JSON.stringify([]));
         })
@@ -150,7 +146,6 @@ function getNeededCards(){
 }
 
 function getNeededCardsForDeck(deckId){
-    console.log(deckId);
     let query = "select c.name, SUM(dc.count) as dcCount, if(ic.iCount is null, 0, ic.iCount) as iCount from deck_cards dc left join cards c on c.id = dc.card_id";
     query += " left join (select SUM(count) as iCount, c.name from inventory i left join cards c on c.id = i.idcards group by c.name) ic on c.name = ic.name";
     query += " left join decks d on dc.deck_id = d.iddecks"
@@ -158,7 +153,6 @@ function getNeededCardsForDeck(deckId){
     query += " group by c.name";
     query += " having dcCount > iCount";
     query += " order by c.name";
-    console.log(query);
     return new Promise(resolve =>{
         con.query(query, function(err, result){
             resolve(result);

@@ -36,13 +36,11 @@ async function queryDb(){
     await new Promise(resolve => {
         con.query(query, [queryValues], function(err, result){
             if(err) {
-                console.log(err);
                 return;
             };
             resolve();
         })
     }).then(() => {
-        console.log("success!");
     })
 }
 
