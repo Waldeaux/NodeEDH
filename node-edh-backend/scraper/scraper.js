@@ -107,7 +107,6 @@ async function insertScraping(){
                 if(isFront)
                 {
                     await dynamicInsertModalCard();
-                    break;
                 }
                 await goBack();
                 x++;
