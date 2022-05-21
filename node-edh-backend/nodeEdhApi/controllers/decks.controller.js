@@ -65,7 +65,7 @@ controllerEndpoints.push(
             let deckId = -1;
             let cardsList = [];
             cards.concat(req.body.sideboard).forEach(x =>{
-                promiseArray.push(getCard(x));
+                promiseArray.push(getCard(x, errorArray));
             })
             await Promise.all(promiseArray).then(resolve =>{
                 if(errorArray.length > 0){
@@ -106,9 +106,10 @@ controllerEndpoints.push(
             let cards = req.body.cards;
             var cardIdList = [];
             let deckId = req.params.id;
+            let errorArray = [];
                 //For each unique card name submitted, get the appropriate id
                 cards.concat(req.body.sideboard).forEach(x =>{
-                    promiseArray.push(getCard(x));
+                    promiseArray.push(getCard(x, errorArray));
                 })
                 await Promise.all(promiseArray).then(result =>{
                     cardIdList = result;

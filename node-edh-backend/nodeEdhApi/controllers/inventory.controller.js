@@ -40,11 +40,12 @@ controllerEndpoints.push(
             let inventory = req.body.inventory;
             var cardIdList = [];
             var currentCard;
+            let errorArray = [];
             //For each unique card name submitted, get the appropriate id
             try{
                 inventory.forEach(x =>{
                     currentCard = x;
-                    promiseArray.push(getCard(x));
+                    promiseArray.push(getCard(x, errorArray));
                 })
                 await Promise.all(promiseArray).then(result =>{
                     cardIdList = result;

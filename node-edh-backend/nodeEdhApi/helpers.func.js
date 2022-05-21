@@ -1,6 +1,6 @@
 
 var con = require('./databaseConnection');
-exports.getCard = function (card){
+exports.getCard = function (card, errorArray){
     let name = card.cardText;
     name = name.replace('\'','').replace(',','');
     let query = `select id from NodeEDH.cards where standardized_name = "${name}" limit 1;`
