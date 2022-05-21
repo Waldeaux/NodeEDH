@@ -6,15 +6,20 @@ var page;
 var con;
 var query = "";
 var queryValues = [];
-var globalSetCode = "VOW"
-var setName = 'Innistrad: Crimson Vow';
+var globalSetCode = "SNC"
+var setName = 'Streets of New Capenna';
 var browser;
 var symbolSwitch = symbolSwitchFunction;
 main();
 async function main(){
     composeQuery();
+    try{
     await insertScraping();
     await queryDb();
+    }
+    catch(e){
+        console.log(queryValues);
+    }
     browser.close();
     return;
 }
@@ -92,6 +97,8 @@ async function insertScraping(){
             let name = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContentHeader_subtitleDisplay`);
             let faceName = await getInnerContent(`#ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_cardComponent0 [id*=nameRow] .value`);
             if(name != faceName){
+                console.log("name");
+                console.log("faceName");
                 await goBack();
                 x++;
                 continue;
@@ -198,6 +205,7 @@ async function insertScraping(){
             cardObject.colorIdentityString = colorIdentity.join(',');
         
             textString = textString.replace(/'/g, `\\\'`);
+            console.log(name);
             cardObject.loyalty = loyalty;
             cardObject.manaCostText = manaCostText;
             cardObject.faceName = name;
