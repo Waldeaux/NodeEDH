@@ -45,7 +45,7 @@ function getInventoryCount(cardId){
 }
 
 
-function getDecksByCard(cardId){
+function getDecksByCard(cardId, cardName){
     let query = "select d.name as locations, dc.count, c.name as cardName from cards c "
     query += "join cards name_cards on c.name = name_cards.name "
     query += "join deck_cards dc on name_cards.id = dc.card_id "
