@@ -17,9 +17,15 @@ function initializeEndpoints(endpoints){
         }
     });
 }
+app.get('/', function (req, res) {
+    res.status(200);
+    res.write('Success!');
+    res.end();
+})
 async function main(){
     
     initializeEndpoints(endpoints);
-    app.listen(8081, function(){
+    const port = process.env.PORT || 8081;
+    app.listen(port, function(){
     })
 }
