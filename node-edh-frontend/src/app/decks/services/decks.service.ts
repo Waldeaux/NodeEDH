@@ -17,7 +17,7 @@ export class DecksService {
     return this.data$.asObservable();
   }
   getDecks(){
-    this.http.get<Deck[]>('http://localhost:8081/decks').pipe(
+    this.http.get<Deck[]>('http://tutorials-env.eba-q5ybfhgp.us-east-1.elasticbeanstalk.com/decks').pipe(
       tap(x =>{
         this.data$.next(x);
       })

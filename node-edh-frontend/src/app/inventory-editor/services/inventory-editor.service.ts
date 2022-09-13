@@ -26,7 +26,7 @@ export class InventoryEditorService {
 
   fetch(){
     this.busy$.next(true);
-    this.http.get<InventoryCard[]>(`http://localhost:8081/inventory`).pipe(
+    this.http.get<InventoryCard[]>(`http://tutorials-env.eba-q5ybfhgp.us-east-1.elasticbeanstalk.com/inventory`).pipe(
       tap(x =>{
         this.data$.next(x);
       }),
@@ -38,7 +38,7 @@ export class InventoryEditorService {
 
   updateInventory(inventory){
     this.busy$.next(true);
-    this.http.put(`http://localhost:8081/inventory`,inventory).pipe(
+    this.http.put(`http://tutorials-env.eba-q5ybfhgp.us-east-1.elasticbeanstalk.com/inventory`,inventory).pipe(
       finalize(() =>{
         this.busy$.next(false);
       })

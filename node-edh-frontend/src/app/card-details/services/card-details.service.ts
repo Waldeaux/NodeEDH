@@ -30,7 +30,7 @@ export class CardDetailsService {
   }
 
   cardDetailsApiCall(id:number):Observable<CardDetails>{
-    return this.http.get<CardDetails>(`http://localhost:8081/cards/${id}`);
+    return this.http.get<CardDetails>(`http://tutorials-env.eba-q5ybfhgp.us-east-1.elasticbeanstalk.com/cards/${id}`);
   }
   constructor(
     private http:HttpClient

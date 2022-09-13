@@ -17,7 +17,7 @@ export class DeckEditorService {
   }
   updateDeckDetails(id, body){
     this.busy$.next(true);
-    this.http.put(`http://localhost:8081/decks/${id}`, body).pipe(
+    this.http.put(`http://tutorials-env.eba-q5ybfhgp.us-east-1.elasticbeanstalk.com/decks/${id}`, body).pipe(
       tap(x=>{
         console.log(x);
       }),
@@ -29,7 +29,7 @@ export class DeckEditorService {
 
   deleteDeck(id){
     this.busy$.next(true);
-    this.http.delete(`http://localhost:8081/decks/${id}`).pipe(
+    this.http.delete(`http://tutorials-env.eba-q5ybfhgp.us-east-1.elasticbeanstalk.com/decks/${id}`).pipe(
       tap(x=>{
         this.busy$.next(false);
       })

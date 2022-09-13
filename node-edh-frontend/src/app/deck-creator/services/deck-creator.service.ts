@@ -29,7 +29,7 @@ export class DeckCreatorService {
 
   createDeck(body){
     this.busy$.next(true);
-    this.http.post<number>(`http://localhost:8081/decks`, body).pipe(
+    this.http.post<number>(`http://tutorials-env.eba-q5ybfhgp.us-east-1.elasticbeanstalk.com/decks`, body).pipe(
       tap(x=>{
         this.data$.next(x);
         this.success$.next(true);

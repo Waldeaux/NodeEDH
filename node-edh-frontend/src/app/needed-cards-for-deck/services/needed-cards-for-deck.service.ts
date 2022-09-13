@@ -24,7 +24,7 @@ export class NeededCardsForDeckService {
   fetch(id){
     console.log(id);
     this.busy$.next(true);
-    this.http.get<CardComparisons[]>(`http://localhost:8081/inventory/comparison/${id}`).pipe(
+    this.http.get<CardComparisons[]>(`http://tutorials-env.eba-q5ybfhgp.us-east-1.elasticbeanstalk.com/inventory/comparison/${id}`).pipe(
       tap(x =>{
         this.data$.next(x);
       }),

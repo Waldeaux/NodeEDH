@@ -32,6 +32,6 @@ export class DeckDetailsService {
   }
 
   deckDetailsApiCall(id:number):Observable<DeckDetails>{
-    return this.http.get<DeckDetails>(`http://localhost:8081/decks/${id}`);
+    return this.http.get<DeckDetails>(`http://tutorials-env.eba-q5ybfhgp.us-east-1.elasticbeanstalk.com/decks/${id}`);
   }
 }
