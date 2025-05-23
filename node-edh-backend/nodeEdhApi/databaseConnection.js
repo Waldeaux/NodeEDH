@@ -3,10 +3,10 @@ var mysql = require('mysql');
 var con;
 async function createConnection(){
     con = mysql.createConnection({
-        host:'nodeedh.cwlxyhjp27tf.us-east-1.rds.amazonaws.com',
+        host:'nodeedhdb.cwlxyhjp27tf.us-east-1.rds.amazonaws.com',
         port:'3306',
         user:'tswalden95',
-        password:'Tsw1594567533236395!'
+        password:'NodeEDH1594567533236395!'
     });
     var promise = new Promise(resolve => {
         con.connect(function(error){
